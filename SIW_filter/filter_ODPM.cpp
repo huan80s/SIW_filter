@@ -3944,8 +3944,8 @@ void scan_coef_Matrix_middle(complex** Coef, int num_total, int ** Coef_location
 	}
 	//====================================================================================================
 	//调用封装函数
-	//scan_coef_Matrix_middle_wrapper(j, Coef, Coef_location,num_total, sizeN, offset);
-	if (true){
+	scan_coef_Matrix_middle_wrapper(j, Coef, Coef_location,num_total, sizeN, offset);
+	if (false){
 		//******************************************************************************************
 		for (i = (num_total - Nx_2 - Nx_3 - Num1); i<(num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i++)// circle num17(1) Nx_2:  74 node!  part1 !
 		{
