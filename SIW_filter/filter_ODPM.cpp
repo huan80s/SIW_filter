@@ -4,6 +4,7 @@
       计算电场Ey的总场值，并利用所得场值计算S11和S21
 	  重叠型DDM：重叠区域为1个均匀网格
 	  子网格法，二次加细，3:2的空隙圆柱比。
+参考程序： 樊瑞SIW_filter(矩阵剖分）
 尺寸：a=17mm，d0=18mm，d1=9mm，w=2mm
 频率：7.49GHz;  波长：27mm;  介电常数：2.2
 激励：沿z向打入TE波主模TE10：sin(pi*x/a)*exp(-j*kz*dx)
@@ -603,7 +604,7 @@ void scan_coef_Matrix_end1(complex** Coef, int num_total, int ** Coef_location, 
 		j = j + 1;
 	}
 	//***************************************************************************************
-	for (i = (Nx_side*N_d1 + Nx_side + Nx_1); i<(Nx_side*N_d1 + Nx_side + Nx_1 + Nx_2); i++)//right 2 Nx_2 :  77 node! 
+	for (i = (Nx_side*N_d1 + Nx_side + Nx_1); i<(Nx_side*N_d1 + Nx_side + Nx_1 + Nx_2); i++)//right 2 Nx_2 :  74 node! 
 	{
 		switch (i - Nx_side*N_d1 - Nx_1 - Nx_side)
 		{
@@ -1988,89 +1989,9 @@ void scan_coef_Matrix_end2(complex** Coef, int num_total, int ** Coef_location, 
 //*********************************************************************************//
 //中间圆孔区域扫参（共20个圆孔）：n代表重叠区域号，Ey[n][M]代表每次迭代所求的解
 //*********************************************************************************//
-//具有相同区域填充的封装函数
+//具有相同区域填充的封装函数(方便矩阵填充 本函数填充的是整体矩阵）
 void scan_coef_Matrix_middle_wrapper(int &j, complex** Coef, int** Coef_location,int num_total, int num, int offset){
 	int i;
-	//******************************************************************************************
-	for (i = (num_total - Nx_2 - Nx_3 - Num1); i<(num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i++)// circle num17(1) Nx_2:  74 node!  part1 !
-	{
-		switch (i - num_total + Nx_2 + Nx_3 + Num1)
-		{
-		case 0:
-			boundary_node(j, j - offset, 1, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
-			break;
-		case (N_d0 - 3) ://2 lei shang 1j
-			kind2_node(j, j - offset, -Num5 - Num4 - Num3 - Num2, -2, -1, 0, 1, Nx_2 + Nx_3,
-			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-			break;
-		case (Node_1 + 1) ://2 lei xia 1j
-			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -1, 0, 1, 2, Nx_2 + Nx_3,
-			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-			break;
-		default:
-			if ((i - num_total + Nx_2 + Nx_3 + Num1) < (N_d0 - 3))// 4dx!
-			{
-				inner_5node(j, j - offset, 4, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
-			}
-			else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (N_d0 - 3)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node11))// 2dx!
-			{
-				inner_5node(j, j - offset, 2, -(Num3 + Num2 + N_d0 - 2), Num1 - N_d0 + 2, Coef, Coef_location);
-			}
-			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node11) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node12))// 2 lei right 2j !
-			{
-				kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node11) * 2),
-					-1, 0, 1, Num1 - N_d0 + 2, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
-			}
-			else// 2dx!
-			{
-				inner_5node(j, j - offset, 2, -(Num3 / 2 + 1 + Num2 + Node_1), Num1 - N_d0 + 2, Coef, Coef_location);
-			}
-			break;
-		}
-		j = j + 1;
-	}
-	for (i = (num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i<(num_total - Nx_2 - Nx_3); i++)// circle num17(1) Nx_2:  74 node!  part2 !
-	{
-		switch (i - num_total + Nx_2 + Nx_3 + Num1)
-		{
-		case (Num1 - 1) :
-			boundary_node(j, j - offset, 2, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);
-			break;
-		case (Node_1 + N_a - 4) ://2 lei shang 1j
-			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -2, -1, 0, 1, Nx_2 + Nx_3,
-			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-			break;
-		case (Node_11 + 1) ://2 lei xia 1j
-			kind2_node(j, j - offset, -Num1 - Num2 - Num3 - Num4, -1, 0, 1, 2, Nx_2 + Nx_3,
-			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-			break;
-		default:
-			if ((i - num_total + Nx_2 + Nx_3 + Num1) < (Node_1 + N_a - 4))// 4dx!
-			{
-				inner_5node(j, j - offset, 4, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), Nx_2 + Nx_3, Coef, Coef_location);
-			}
-			else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (Node_1 + N_a - 4)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node13))// 2dx!
-			{
-				inner_5node(j, j - offset, 2, -(Num3 / 2 + Num2 + Node_1 + N_a - 3), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
-			}
-			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node13) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node14))// 2 lei left 2j !
-			{
-				kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 / 2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node13) * 2),
-					-1, 0, 1, Num1 - Node_11 + Nx_3 - 1, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
-			}
-			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node14) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node_11))// 2dx
-			{
-				inner_5node(j, j - offset, 2, -(Num2 + Node_11 + 1), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
-			}
-			else
-			{
-				inner_5node(j, j - offset, 4, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);// 4dx!
-			}
-			break;
-		}
-		j = j + 1;
-	}
-	//cout << "offset:" << j << endl;
 	//*****************************************************************************************
 	for (i = (Nx_2); i<(Nx_2 + Nx_3); i++)//left 2 Nx_3:  30 node! 
 	{
@@ -3505,86 +3426,7 @@ void scan_coef_Matrix_middle_wrapper(int &j, complex** Coef, int** Coef_location
 		j = j + 1;
 	}
 	//cout << "offset1 start:" << j << endl;
-	//***************************************************************************************
-	//cout << "circle num1:" << j << endl;
-	for (i = (Nx_2 + Nx_3); i<(Nx_2 + Nx_3 + Node_1 + 2); i++)// circle num1 Nx_2:  74 node!  part1 !
-	{
-		switch (i - Nx_2 - Nx_3)
-		{
-		case 0:
-			boundary_node(j, j - offset, 1, -Nx_2 - Nx_3, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
-			break;
-		case (N_d0 - 3) ://2 lei shang 1j
-			kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 + Num2 + Num3 + Num4,
-			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-			break;
-		case (Node_1 + 1) ://2 lei xia 1j
-			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
-			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-			break;
-		default:
-			if ((i - Nx_2 - Nx_3) < (N_d0 - 3))// 4dx!
-			{
-				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
-			}
-			else if (((i - Nx_2 - Nx_3) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3) < Node11))// 2dx!
-			{
-				inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - N_d0 + 2 + Num2, Coef, Coef_location);
-			}
-			else if (((i - Nx_2 - Nx_3) >= Node11) && ((i - Nx_2 - Nx_3) <= Node12))// 2 lei left 2j !
-			{
-				kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Nx_3 + N_d0 - 2), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + ((i - Nx_2 - Nx_3) - Node11) * 2,
-					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
-			}
-			else// 2dx!
-			{
-				inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - Node_1 + Num2 + Num3 / 2 - 1, Coef, Coef_location);
-			}
-			break;
-		}
-		j = j + 1;
-	}
-	for (i = (Nx_2 + Nx_3 + Node_1 + 2); i<(Nx_2 + Nx_3 + Num1); i++)// circle num1 Nx_2:  74 node!  part2 !
-	{
-		switch (i - Nx_2 - Nx_3)
-		{
-		case (Num1 - 1) :
-			boundary_node(j, j - offset, 2, -Nx_2 - Nx_3, Num5 + Num2 + Num3 + Num4, Coef, Coef_location);
-			break;
-		case (Node_1 + N_a - 4) ://2 lei shang 1j
-			kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
-			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-			break;
-		case (Node_11 + 1) ://2 lei xia 1j
-			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num5 + Num2 + Num3 + Num4,
-			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-			break;
-		default:
-			if ((i - Nx_2 - Nx_3) < (Node_1 + N_a - 4))// 4dx!
-			{
-				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5, Coef, Coef_location);
-			}
-			else if (((i - Nx_2 - Nx_3) > (Node_1 + N_a - 4)) && ((i - Nx_2 - Nx_3) < Node13))// 2dx!
-			{
-				inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2, Coef, Coef_location);
-			}
-			else if (((i - Nx_2 - Nx_3) >= Node13) && ((i - Nx_2 - Nx_3) <= Node14))// 2 lei left 2j !
-			{
-				kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Node_11 + 1), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + Num2 / 2 + ((i - Nx_2 - Nx_3) - Node13) * 2,
-					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
-			}
-			else if (((i - Nx_2 - Nx_3) >= Node14) && ((i - Nx_2 - Nx_3) <= Node_11))// 2dx
-			{
-				inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_11 + Num2 + Num3 - 1, Coef, Coef_location);
-			}
-			else
-			{
-				inner_5node(j, j - offset, 4, -(Nx_3 + Nx_2), Num5 + Num2 + Num3 + Num4, Coef, Coef_location);// 4dx!
-			}
-			break;
-		}
-		j = j + 1;
-	}
+	
 
 }
 void scan_coef_Matrix_middle(complex** Coef, int num_total, int ** Coef_location, int sizeM, int sizeN, int offset)
@@ -3942,1607 +3784,171 @@ void scan_coef_Matrix_middle(complex** Coef, int num_total, int ** Coef_location
 		}
 		j = j + 1;
 	}
+	//******************************************************************************************
+	for (i = (num_total - Nx_2 - Nx_3 - Num1); i<(num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i++)// circle num17(1) Nx_2:  74 node!  part1 !
+	{
+		switch (i - num_total + Nx_2 + Nx_3 + Num1)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Num5 - Num4 - Num3 - Num2, -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - num_total + Nx_2 + Nx_3 + Num1) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (N_d0 - 3)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node11))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 + Num2 + N_d0 - 2), Num1 - N_d0 + 2, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node11) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node12))// 2 lei right 2j !
+			{
+				kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node11) * 2),
+					-1, 0, 1, Num1 - N_d0 + 2, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + 1 + Num2 + Node_1), Num1 - N_d0 + 2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i<(num_total - Nx_2 - Nx_3); i++)// circle num17(1) Nx_2:  74 node!  part2 !
+	{
+		switch (i - num_total + Nx_2 + Nx_3 + Num1)
+		{
+		case (Num1 - 1) :
+			boundary_node(j, j - offset, 2, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_11 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -Num1 - Num2 - Num3 - Num4, -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - num_total + Nx_2 + Nx_3 + Num1) < (Node_1 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (Node_1 + N_a - 4)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node13))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + Num2 + Node_1 + N_a - 3), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node13) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node14))// 2 lei left 2j !
+			{
+				kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 / 2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node13) * 2),
+					-1, 0, 1, Num1 - Node_11 + Nx_3 - 1, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node14) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node_11))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num2 + Node_11 + 1), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
+			}
+			else
+			{
+				inner_5node(j, j - offset, 4, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);// 4dx!
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//cout << "offset:" << j << endl;
 	//====================================================================================================
 	//调用封装函数
-	scan_coef_Matrix_middle_wrapper(j, Coef, Coef_location,num_total, sizeN, offset);
-	if (false){
-		//******************************************************************************************
-		for (i = (num_total - Nx_2 - Nx_3 - Num1); i<(num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i++)// circle num17(1) Nx_2:  74 node!  part1 !
-		{
-			switch (i - num_total + Nx_2 + Nx_3 + Num1)
-			{
-			case 0:
-				boundary_node(j, j - offset, 1, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
-				break;
-			case (N_d0 - 3) ://2 lei shang 1j
-				kind2_node(j, j - offset, -Num5 - Num4 - Num3 - Num2, -2, -1, 0, 1, Nx_2 + Nx_3,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_1 + 1) ://2 lei xia 1j
-				kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -1, 0, 1, 2, Nx_2 + Nx_3,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - num_total + Nx_2 + Nx_3 + Num1) < (N_d0 - 3))// 4dx!
-				{
-					inner_5node(j, j - offset, 4, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (N_d0 - 3)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node11))// 2dx!
-				{
-					inner_5node(j, j - offset, 2, -(Num3 + Num2 + N_d0 - 2), Num1 - N_d0 + 2, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node11) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node12))// 2 lei right 2j !
-				{
-					kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node11) * 2),
-						-1, 0, 1, Num1 - N_d0 + 2, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
-				}
-				else// 2dx!
-				{
-					inner_5node(j, j - offset, 2, -(Num3 / 2 + 1 + Num2 + Node_1), Num1 - N_d0 + 2, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i<(num_total - Nx_2 - Nx_3); i++)// circle num17(1) Nx_2:  74 node!  part2 !
-		{
-			switch (i - num_total + Nx_2 + Nx_3 + Num1)
-			{
-			case (Num1 - 1) :
-				boundary_node(j, j - offset, 2, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);
-				break;
-			case (Node_1 + N_a - 4) ://2 lei shang 1j
-				kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -2, -1, 0, 1, Nx_2 + Nx_3,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_11 + 1) ://2 lei xia 1j
-				kind2_node(j, j - offset, -Num1 - Num2 - Num3 - Num4, -1, 0, 1, 2, Nx_2 + Nx_3,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - num_total + Nx_2 + Nx_3 + Num1) < (Node_1 + N_a - 4))// 4dx!
-				{
-					inner_5node(j, j - offset, 4, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), Nx_2 + Nx_3, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (Node_1 + N_a - 4)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node13))// 2dx!
-				{
-					inner_5node(j, j - offset, 2, -(Num3 / 2 + Num2 + Node_1 + N_a - 3), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node13) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node14))// 2 lei left 2j !
-				{
-					kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 / 2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node13) * 2),
-						-1, 0, 1, Num1 - Node_11 + Nx_3 - 1, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node14) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node_11))// 2dx
-				{
-					inner_5node(j, j - offset, 2, -(Num2 + Node_11 + 1), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
-				}
-				else
-				{
-					inner_5node(j, j - offset, 4, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);// 4dx!
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//cout << "offset:" << j << endl;
-		//*****************************************************************************************
-		for (i = (Nx_2); i<(Nx_2 + Nx_3); i++)//left 2 Nx_3:  30 node! 
-		{
-			switch (i - Nx_2)
-			{
-			case 0:// 1 lei shang
-				kind1_node(j, i, -(Nx_2 - N_d0 + 2) - 2, -(Nx_2 - N_d0 + 2) - 1, -(Nx_2 - N_d0 + 2), 0, 1, Nx_3 + N_d0 - 2 - 2, Nx_3 + N_d0 - 2 - 1, Nx_3 + N_d0 - 2,
-					A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case (Nx_3 / 2 - 1) :// 1 lei xia
-				kind1_node(j, i, -(Nx_2 - N_d0 + 2), -(Nx_2 - N_d0 + 2) + 1, -(Nx_2 - N_d0 + 2) + 2, -1, 0,
-				Nx_3 + N_d0 - 2, Nx_3 + N_d0 - 2 + 1, Nx_3 + N_d0 - 2 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			case (Nx_3 / 2) :// 1 lei shang
-				kind1_node(j, i, -(Nx_2 - Node_11 - 1 + Nx_3) - 2, -(Nx_2 - Node_11 - 1 + Nx_3) - 1, -(Nx_2 - Node_11 - 1 + Nx_3), 0, 1,
-				1 + Node_11 - 2, 1 + Node_11 - 1, 1 + Node_11,
-				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case (Nx_3 - 1) :// 1 lei xia
-				kind1_node(j, i, -(Nx_2 - Node_11 - 1 + Nx_3), -(Nx_2 - Node_11 - 1 + Nx_3) + 1, -(Nx_2 - Node_11 - 1 + Nx_3) + 2, -1, 0,
-				1 + Node_11, 1 + Node_11 + 1, 1 + Node_11 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2) < (Nx_3 / 2 - 1))
-				{
-					inner_5node(j, i, 2, -(Nx_2 - N_d0 + 2), Nx_3 + N_d0 - 2, Coef, Coef_location);
-				}
-				else
-				{
-					inner_5node(j, i, 2, -(Nx_2 - Node_11 - 1 + Nx_3), 1 + Node_11, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3); i<(Nx_2 + Nx_3 + Node_1 + 2); i++)// circle num1 Nx_2:  74 node!  part1 !
-		{
-			switch (i - Nx_2 - Nx_3)
-			{
-			case 0:
-				boundary_node(j, i, 1, -Nx_2 - Nx_3, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
-				break;
-			case (N_d0 - 3) ://2 lei shang 1j
-				kind2_node(j, i, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 + Num2 + Num3 + Num4,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_1 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3) < (N_d0 - 3))// 4dx!
-				{
-					inner_5node(j, i, 4, -Nx_3 - Nx_2, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3) < Node11))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Nx_3 + N_d0 - 2), Num1 - N_d0 + 2 + Num2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) >= Node11) && ((i - Nx_2 - Nx_3) <= Node12))// 2 lei left 2j !
-				{
-					kind2_node(j, i, -Nx_3 - Nx_2, -(Nx_3 + N_d0 - 2), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + ((i - Nx_2 - Nx_3) - Node11) * 2,
-						B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
-				}
-				else// 2dx!
-				{
-					inner_5node(j, i, 2, -(Nx_3 + N_d0 - 2), Num1 - Node_1 + Num2 + Num3 / 2 - 1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Node_1 + 2); i<(Nx_2 + Nx_3 + Num1); i++)// circle num1 Nx_2:  74 node!  part2 !
-		{
-			switch (i - Nx_2 - Nx_3)
-			{
-			case (Num1 - 1) :
-				boundary_node(j, i, 2, -Nx_2 - Nx_3, Num5 + Num2 + Num3 + Num4, Coef, Coef_location);
-				break;
-			case (Node_1 + N_a - 4) ://2 lei shang 1j
-				kind2_node(j, i, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_11 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num5 + Num2 + Num3 + Num4,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3) < (Node_1 + N_a - 4))// 4dx!
-				{
-					inner_5node(j, i, 4, -Nx_3 - Nx_2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) > (Node_1 + N_a - 4)) && ((i - Nx_2 - Nx_3) < Node13))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Node_11 + 1), Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) >= Node13) && ((i - Nx_2 - Nx_3) <= Node14))// 2 lei left 2j !
-				{
-					kind2_node(j, i, -Nx_3 - Nx_2, -(Node_11 + 1), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + Num2 / 2 + ((i - Nx_2 - Nx_3) - Node13) * 2,
-						B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) >= Node14) && ((i - Nx_2 - Nx_3) <= Node_11))// 2dx
-				{
-					inner_5node(j, i, 2, -(Node_11 + 1), Num1 - Node_11 + Num2 + Num3 - 1, Coef, Coef_location);
-				}
-				else
-				{
-					inner_5node(j, i, 4, -(Nx_3 + Nx_2), Num5 + Num2 + Num3 + Num4, Coef, Coef_location);// 4dx!
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************!!!!!!!!!!
-		for (i = (Nx_2 + Nx_3 + Num1); i<(Nx_2 + Nx_3 + Num1 + Num2 / 2); i++)// num 2 :  26 node! part1
-		{
-			switch (i - Nx_2 - Nx_3 - Num1)
-			{
-			case 0:// 3 lei 2j shang
-				kind3_node(j, i, -(Num1 - Node11) - 1, -(Num1 - Node11), 0, 1, Num2 + 5 - 2, Num2 + 5,
-					C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
-				break;
-			case (Num2 / 2 - 1) ://node2: 3 lei 2j xia
-				kind3_node(j, i, -(Num1 - Node12 + Num2 / 2 - 1), -(Num1 - Node12 + Num2 / 2 - 1) + 1, -1, 0, Num2 + 5, Num2 + 5 + 2,
-				C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1) % 2 == 0)// 1dx
-				{
-					inner_5node(j, i, 1, -((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2), Num2 + 5, Coef, Coef_location);
-				}
-				else//1 lei  2j left
-				{
-					kind1_node(j, i, -((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2) - (Nx_3 + N_d0 - 2),
-						-((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2) - (Nx_3 + N_d0 - 2) + 1,
-						-((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2),
-						-((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2) + 1,
-						-1, 0, 1, 5 + Num2, A2_2, A2_2, A1_2, A1_2, A3_2, A5_2, A3_2, A4_2, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 / 2); i<(Nx_2 + Nx_3 + Num1 + Num2); i++)// num 2 :  26 node! part2
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 / 2)
-			{
-			case 0:// 3 lei 2j shang
-				kind3_node(j, i, -(Num1 - Node13 + Num2 / 2) - 1, -(Num1 - Node13 + Num2 / 2), 0, 1, Num3 - 5 - 2, Num3 - 5,
-					C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
-				break;
-			case (Num2 / 2 - 1) :// 3 lei 2j xia
-				kind3_node(j, i, -(Num1 - Node14 + Num2 - 1), -(Num1 - Node14 + Num2 - 1) + 1, -1, 0, Num3 - 5, Num3 - 5 + 2,
-				C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) % 2 == 0)// 1dx
-				{
-					inner_5node(j, i, 1, -((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2,
-						Num3 - 5, Coef, Coef_location);
-				}
-				else//1 lei 2j left
-				{
-					kind1_node(j, i, -((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2 - (Node_11 + 1),
-						-((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2 - (Node_11 + 1) + 1,
-						-((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2,
-						-((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2 + 1,
-						-1, 0, 1, Num3 - 5, A2_2, A2_2, A1_2, A1_2, A3_2, A5_2, A3_2, A4_2, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************!!!!
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 / 2); i++)// num 3 :  46 node! part1
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2)
-			{
-			case 0:// 1 lei 1j shang
-				kind1_node(j, i, -(Num1 - N_d0 + 2 + Num2) - 2, -(Num1 - N_d0 + 2 + Num2) - 1, -(Num1 - N_d0 + 2 + Num2), 0, 1, Num3 + Num4 + N_d0 - 2 - 2,
-					Num3 + Num4 + N_d0 - 2 - 1, Num3 + Num4 + N_d0 - 2, A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case 3:// 2 lei 2j shang
-				kind2_node(j, i, -(Num1 - N_d0 + 2 + Num2), -2, -1, 0, 1, Num3 + Num4 + N_d0 - 2,
-					B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case 4:// 3 lei 2j shang
-				kind3_node(j, i, -(Num1 - N_d0 + 2 + Num2) - 1, -(Num1 - N_d0 + 2 + Num2), -1, 0, 1, Num3 - 4,
-					C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 5) :// 3 lei 2j xia
-				kind3_node(j, i, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), -(Num1 - Node_1 + Num2 + Num3 / 2 - 1) + 1, -1, 0, 1, Num3 - 4,
-				C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 4) :// 2 lei 2j xia
-				kind2_node(j, i, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), -1, 0, 1, 2, Num3 / 2 + 1 + Num4 + Node_5,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 1) :// 1 lei 1j xia
-				kind1_node(j, i, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), -(Num1 - Node_1 + Num2 + Num3 / 2 - 1) + 1, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1) + 2, -1, 0,
-				Num3 / 2 + 1 + Num4 + Node_5, Num3 / 2 + 1 + Num4 + Node_5 + 1, Num3 / 2 + 1 + Num4 + Node_5 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2) < 3)// 2dx
-				{
-					inner_5node(j, i, 2, -(Num1 - N_d0 + 2 + Num2), Num3 + Num4 + N_d0 - 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2) < (Num3 / 2 - 5)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num2 + 5), Num3 - 4, Coef, Coef_location);
-				}
-				else// 2dx
-				{
-					inner_5node(j, i, 2, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), Num3 / 2 + 1 + Num4 + Node_5, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 / 2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3); i++)// num 3 :  46 node! part2
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2)
-			{
-			case 0:// 1 lei 1j shang
-				kind1_node(j, i, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2) - 2, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2) - 1, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), 0, 1,
-					Num3 / 2 + Num4 + Node_5 + N_a - 3 - 2, Num3 / 2 + Num4 + Node_5 + N_a - 3 - 1, Num3 / 2 + Num4 + Node_5 + N_a - 3,
-					A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case 3:// 2 lei 2j shang
-				kind2_node(j, i, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), -2, -1, 0, 1, Num3 / 2 + Num4 + Node_5 + N_a - 3,
-					B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case 4:// 3 lei 2j shang
-				kind3_node(j, i, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2) - 1, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), -1, 0, 1, 5 + Num4 - 1,
-					C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 5) :// 3 lei 2j xia
-				kind3_node(j, i, -(Num1 - Node_11 + Num2 + Num3 - 1), -(Num1 - Node_11 + Num2 + Num3 - 1) + 1, -1, 0, 1, 5 + Num4 - 1,
-				C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 4) :// 2 lei 2j xia
-				kind2_node(j, i, -(Num1 - Node_11 + Num2 + Num3 - 1), -1, 0, 1, 2, 1 + Num4 + Node_55,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 1) :// 1 lei 1j xia
-				kind1_node(j, i, -(Num1 - Node_11 + Num2 + Num3 - 1), -(Num1 - Node_11 + Num2 + Num3 - 1) + 1, -(Num1 - Node_11 + Num2 + Num3 - 1) + 2, -1, 0,
-				1 + Num4 + Node_55, 1 + Num4 + Node_55 + 1, 1 + Num4 + Node_55 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2) < 3)// 2dx
-				{
-					inner_5node(j, i, 2, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), Num3 / 2 + Num4 + Node_5 + N_a - 3, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2) < (Num3 / 2 - 5)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num3 - 5), 5 + Num4 - 1, Coef, Coef_location);
-				}
-				else// 2dx
-				{
-					inner_5node(j, i, 2, -(Num1 - Node_11 + Num2 + Num3 - 1), 1 + Num4 + Node_55, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 / 2); i++)// num 4 :  30 node! part1
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3)
-			{
-			case 0:// 1 lei 2j shang
-				kind1_node(j, i, -(Num3 - 4) - 2, -(Num3 - 4) - 1, -(Num3 - 4), 0, 1, Num4 + N_d0 + 2 - 2, Num4 + N_d0 + 2 - 1, Num4 + N_d0 + 2,
-					A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case (Num4 / 2 - 1) :// 1 lei 2j xia
-				kind1_node(j, i, -(Num3 - 4), -(Num3 - 4) + 1, -(Num3 - 4) + 2, -1, 0,
-				Num4 + N_d0 + 2 - N_c1, Num4 + N_d0 + 2 - N_c1 + 1, Num4 + N_d0 + 2 - N_c1 + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) <= Node41)// 1dx
-				{
-					inner_5node(j, i, 1, -(Num3 - 4), Num4 + N_d0 + 2, Coef, Coef_location);
-				}
-				else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) >= Node42) // 1dx
-				{
-					inner_5node(j, i, 1, -(Num3 - 4), Num4 + N_d0 + 2 - N_c1, Coef, Coef_location);
-				}
-				else// 1dx 4_node
-				{
-					inner_4node(j, i, -(Num3 - 4), -1, 0, 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 / 2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4); i++)// num 4 :  30 node! part2
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3)
-			{
-			case (Num4 / 2) :// 1 lei 2j shang
-				kind1_node(j, i, -(5 + Num4 - 1) - 2, -(5 + Num4 - 1) - 1, -(5 + Num4 - 1), 0, 1,
-				(Node_55 - 4 + 1 + N_c1) - 2, (Node_55 - 4 + 1 + N_c1) - 1, (Node_55 - 4 + 1 + N_c1),
-				A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case (Num4 - 1) :// 1 lei 2j xia
-				kind1_node(j, i, -(5 + Num4 - 1), -(5 + Num4 - 1) + 1, -(5 + Num4 - 1) + 2, -1, 0,
-				(Node_55 - 4 + 1), (Node_55 - 4 + 1) + 1, (Node_55 - 4 + 1) + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) <= Node43)// 1dx
-				{
-					inner_5node(j, i, 1, -(5 + Num4 - 1), (Node_55 - 4 + 1 + N_c1), Coef, Coef_location);
-				}
-				else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) >= Node44) // 1dx
-				{
-					inner_5node(j, i, 1, -(5 + Num4 - 1), (Node_55 - 4 + 1), Coef, Coef_location);
-				}
-				else// 1dx 4_node
-				{
-					inner_4node(j, i, -(5 + Num4 - 1), -1, 0, 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Node_5 + 2); i++)// circle num5 :  80 node!  part1 !
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4)
-			{
-			case 0:
-				boundary_node(j, i, 1, -Num1 - Num2 - Num3 - Num4, Num5 + Num6 + Num7 + Num8, Coef, Coef_location);
-				break;
-			case (N_d0 - 3) ://2 lei shang 1j
-				kind2_node(j, i, -Num1 - Num2 - Num3 - Num4, -2, -1, 0, 1, Num5 + Num6 + Num7 + Num8,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (N_d0 + 1) :// 2 lei 2j shang
-				kind2_node(j, i, -(Num3 + Num4 + N_d0 - 2), -2, -1, 0, 1, Num5 - N_d0 + 2 + Num6,
-				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node51:// inner 3 node
-				inner_3node(j, i, -(Num4 + N_d0 + 2), -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
-				break;
-			case (Node51 + 1) :// inner 3 node
-				inner_3node(j, i, -(Num4 + N_d0 + 2) + N_c1, 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node_5 - 3) ://2 lei xia 2j
-				kind2_node(j, i, -(Num3 / 2 + 1 + Num4 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num6 + Num7 / 2 - 1,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Node_5 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -(Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (N_d0 - 3))// 4dx!
-				{
-					inner_5node(j, i, 4, -Num1 - Num2 - Num3 - Num4, Num5 + Num6 + Num7 + Num8, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (N_d0 + 1)))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num3 + Num4 + N_d0 - 2), Num5 - N_d0 + 2 + Num6, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (N_d0 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < Node51))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num4 + N_d0 + 2), Num5 - N_d0 - 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node51 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_5 - 3)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num4 + N_d0 + 2) + N_c1, Num5 - N_d0 - 2 - 2, Coef, Coef_location);
-				}
-				else// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num3 / 2 + 1 + Num4 + Node_5), Num5 - Node_5 + Num6 + Num7 / 2 - 1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Node_5 + 2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5); i++)// circle num5 :  80 node!  part2 !
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4)
-			{
-			case (Num5 - 1) :
-				boundary_node(j, i, 2, -Num2 - Num3 - Num4 - Num5, Num6 + Num7 + Num8 + Num9, Coef, Coef_location);
-				break;
-			case (Node_5 + N_a - 4) ://2 lei shang 1j
-				kind2_node(j, i, -(Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5), -2, -1, 0, 1, Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_5 + N_a) :// 2 lei 2j shang
-				kind2_node(j, i, -(Num3 / 2 + Num4 + Node_5 + N_a - 3), -2, -1, 0, 1, Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2,
-				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node52:// inner 3 node
-				inner_3node(j, i, -(Node_55 - 4 + 1) - N_c1, -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
-				break;
-			case (Node52 + 1) :// inner 3 node
-				inner_3node(j, i, -(Node_55 - 4 + 1), 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node_55 - 3) ://2 lei xia 2j
-				kind2_node(j, i, -(Num4 + Node_55 + 1), -1, 0, 1, 2, Num5 - Node_55 + Num6 + Num7 - 1,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Node_55 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -Num2 - Num3 - Num4 - Num5, -1, 0, 1, 2, Num6 + Num7 + Num8 + Num9,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_5 + N_a - 4))// 4dx!
-				{
-					inner_5node(j, i, 4, -(Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5), Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node_5 + N_a - 4)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_5 + N_a)))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num3 / 2 + Num4 + Node_5 + N_a - 3), Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node_5 + N_a)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < Node52))// 1dx
-				{
-					inner_5node(j, i, 1, -(Node_55 - 4 + 1) - N_c1, (Num5 - Node_55 + 4 + Num6 - 1) + 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node52 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_55 - 3)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Node_55 - 4 + 1), (Num5 - Node_55 + 4 + Num6 - 1), Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node_55 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_55 + 1)))// 2dx
-				{
-					inner_5node(j, i, 2, -(Num4 + Node_55 + 1), Num5 - Node_55 + Num6 + Num7 - 1, Coef, Coef_location);
-				}
-				else// 4dx!
-				{
-					inner_5node(j, i, 4, -Num2 - Num3 - Num4 - Num5, Num6 + Num7 + Num8 + Num9, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6); i++)// num 6 :  16 node!
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5)
-			{
-			case 0:// 1 lei 2j shang
-				kind1_node(j, i, -(Num5 - N_d0 - 2) - 2, -(Num5 - N_d0 - 2) - 1, -(Num5 - N_d0 - 2), 0, 1, Num6 + 4 - 2, Num6 + 4 - 1, Num6 + 4,
-					A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case Node61:// inner 3 node
-				inner_3node(j, i, -(Num5 - N_d0 - 2), -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
-				break;
-			case (Node61 + 1) :// inner 3 node
-				inner_3node(j, i, -(Num5 - N_d0 - 2 - 2), 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Num6 / 2 - 1) :// 1 lei 2j xia
-				kind1_node(j, i, -(Num5 - N_d0 - 2 - 2), -(Num5 - N_d0 - 2 - 2) + 1, -(Num5 - N_d0 - 2 - 2) + 2, -1, 0,
-				Num6 + 4 - 2, Num6 + 4 - 2 + 1, Num6 + 4 - 2 + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			case (Num6 / 2) :// 1 lei 2j shang
-				kind1_node(j, i, -(Num5 - Node_55 + 4 + Num6 - 1) - 2 - 2, -(Num5 - Node_55 + 4 + Num6 - 1) - 2 - 1, -(Num5 - Node_55 + 4 + Num6 - 1) - 2, 0, 1,
-				Num7 - 4 + 2 - 2, Num7 - 4 + 2 - 1, Num7 - 4 + 2, A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case Node62:// inner 3 node
-				inner_3node(j, i, -(Num5 - Node_55 + 4 + Num6 - 1) - 2, -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
-				break;
-			case (Node62 + 1) :// inner 3 node
-				inner_3node(j, i, -(Num5 - Node_55 + 4 + Num6 - 1), 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Num6 - 1) :// 1 lei 2j xia
-				kind1_node(j, i, -(Num5 - Node_55 + 4 + Num6 - 1), -(Num5 - Node_55 + 4 + Num6 - 1) + 1, -(Num5 - Node_55 + 4 + Num6 - 1) + 2, -1, 0,
-				Num7 - 4, Num7 - 4 + 1, Num7 - 4 + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5) < Node61)// 1dx
-				{
-					inner_5node(j, i, 1, -(Num5 - N_d0 - 2), Num6 + 4, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5) > (Node61 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5) < (Num6 / 2 - 1)))// 2dx
-				{
-					inner_5node(j, i, 1, -(Num5 - N_d0 - 2 - 2), Num6 + 4 - 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5) > (Num6 / 2)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5) < Node62))// 2dx
-				{
-					inner_5node(j, i, 1, -(Num5 - Node_55 + 4 + Num6 - 1) - 2, Num7 - 4 + 2, Coef, Coef_location);
-				}
-				else// 1dx 4_node
-				{
-					inner_5node(j, i, 1, -(Num5 - Node_55 + 4 + Num6 - 1), Num7 - 4, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************!!!
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 / 2); i++)// num 7 :  28 node! part1
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6)
-			{
-			case 0:// 1 lei 1j shang
-				kind1_node(j, i, -(Num5 - N_d0 + 2 + Num6) - 2, -(Num5 - N_d0 + 2 + Num6) - 1, -(Num5 - N_d0 + 2 + Num6), 0, 1,
-					Num7 + Num8 + N_d0 - 2 - 2, Num7 + Num8 + N_d0 - 2 - 1, Num7 + Num8 + N_d0 - 2,
-					A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case 3:// 2 lei 2j shang
-				kind2_node(j, i, -(Num5 - N_d0 + 2 + Num6), -2, -1, 0, 1, Num7 + Num8 + N_d0 - 2,
-					B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node71://inner 4 node
-				inner_4node(j, i, -(Num6 + 4), -1, 0, Num7 - 4, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node71 + 1) ://inner 4 node
-				inner_4node(j, i, -(Num6 + 4) + 2, 0, 1, Num7 - 4, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Num7 / 2 - 4) :// 2 lei 2j xia
-				kind2_node(j, i, -(Num5 - Node_5 + Num6 + Num7 / 2 - 1), -1, 0, 1, 2, Num7 / 2 + 1 + Num8 + Node_9,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Num7 / 2 - 1) :// 1 lei 1j xia
-				kind1_node(j, i, -(Num5 - Node_5 + Num6 + Num7 / 2 - 1), -(Num5 - Node_5 + Num6 + Num7 / 2 - 1) + 1, -(Num5 - Node_5 + Num6 + Num7 / 2 - 1) + 2, -1, 0,
-				Num7 / 2 + 1 + Num8 + Node_9, Num7 / 2 + 1 + Num8 + Node_9 + 1, Num7 / 2 + 1 + Num8 + Node_9 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) < 3)// 2dx
-				{
-					inner_5node(j, i, 2, -(Num5 - N_d0 + 2 + Num6), Num7 + Num8 + N_d0 - 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) > 3) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) < (Node71)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num6 + 4), Num7 - 4, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) > (Node71 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) < (Num7 / 2 - 4)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num6 + 4) + 2, Num7 - 4, Coef, Coef_location);
-				}
-				else// 2dx
-				{
-					inner_5node(j, i, 2, -(Num5 - Node_5 + Num6 + Num7 / 2 - 1), Num7 / 2 + 1 + Num8 + Node_9, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 / 2);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7); i++)// num 7 :  28 node! part2
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6)
-			{
-			case (Num7 / 2) :// 1 lei 1j shang
-				kind1_node(j, i, -(Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2) - 2, -(Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2) - 1, -(Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2), 0, 1,
-				Num7 / 2 + Num8 + Node_9 + N_a - 3 - 2, Num7 / 2 + Num8 + Node_9 + N_a - 3 - 1, Num7 / 2 + Num8 + Node_9 + N_a - 3,
-				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case (Num7 / 2 + 3) :// 2 lei 2j shang
-				kind2_node(j, i, -(Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2), -2, -1, 0, 1, Num7 / 2 + Num8 + Node_9 + N_a - 3,
-				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node72://inner 4 node
-				inner_4node(j, i, -(Num7 - 5 + 1) - 2, -1, 0, 5 + Num8 - 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node72 + 1) ://inner 4 node
-				inner_4node(j, i, -(Num7 - 5 + 1), 0, 1, 5 + Num8 - 1, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Num7 - 4) :// 2 lei 2j xia
-				kind2_node(j, i, -(Num5 - Node_55 + Num6 + Num7 - 1), -1, 0, 1, 2, 1 + Num8 + Node_99,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Num7 - 1) :// 1 lei 1j xia
-				kind1_node(j, i, -(Num5 - Node_55 + Num6 + Num7 - 1), -(Num5 - Node_55 + Num6 + Num7 - 1) + 1, -(Num5 - Node_55 + Num6 + Num7 - 1) + 2, -1, 0,
-				1 + Num8 + Node_99, 1 + Num8 + Node_99 + 1, 1 + Num8 + Node_99 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) < (Num7 / 2 + 3))// 2dx
-				{
-					inner_5node(j, i, 2, -(Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2), Num7 / 2 + Num8 + Node_9 + N_a - 3, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) > (Num7 / 2 + 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) < (Node72)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num7 - 5 + 1) - 2, 5 + Num8 - 1, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) > (Node72 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6) < (Num7 - 4)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num7 - 5 + 1), 5 + Num8 - 1, Coef, Coef_location);
-				}
-				else// 2dx
-				{
-					inner_5node(j, i, 2, -(Num5 - Node_55 + Num6 + Num7 - 1), 1 + Num8 + Node_99, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8); i++)// num 8 :  12 node! 
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7)
-			{
-			case 0:// 1 lei shang 2j
-				kind1_node(j, i, -(Num7 - 4) - 2, -(Num7 - 4) - 1, -(Num7 - 4), 0, 1, Num8 + N_d0 + 2 - 2, Num8 + N_d0 + 2 - 1, Num8 + N_d0 + 2,
-					A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case 1:
-				inner_5node(j, i, 1, -(Num7 - 4), Num8 + N_d0 + 2, Coef, Coef_location);
-				break;
-			case 2://inner 4 node
-				inner_4node(j, i, -(Num7 - 4), -1, 0, Num8 + N_d0 + 2, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case 3://inner 4 node
-				inner_4node(j, i, -(Num7 - 4), 0, 1, Num8 + N_d0 + 2, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case 4:
-				inner_5node(j, i, 1, -(Num7 - 4), Num8 + N_d0 + 2, Coef, Coef_location);
-				break;
-			case (Num8 / 2 - 1) :// 1 lei xia 2j
-				kind1_node(j, i, -(Num7 - 4), -(Num7 - 4) + 1, -(Num7 - 4) + 2, -1, 0, Num8 + N_d0 + 2, Num8 + N_d0 + 2 + 1, Num8 + N_d0 + 2 + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			case (Num8 / 2) :// 1 lei shang 2j
-				kind1_node(j, i, -(5 + Num8 - 1) - 2, -(5 + Num8 - 1) - 1, -(5 + Num8 - 1), 0, 1,
-				Node_99 - 4 + 1 - 2, Node_99 - 4 + 1 - 1, Node_99 - 4 + 1,
-				A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case 7:
-				inner_5node(j, i, 1, -(5 + Num8 - 1), Node_99 - 4 + 1, Coef, Coef_location);
-				break;
-			case 8://inner 4 node
-				inner_4node(j, i, -(5 + Num8 - 1), -1, 0, Node_99 - 4 + 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case 9://inner 4 node
-				inner_4node(j, i, -(5 + Num8 - 1), 0, 1, Node_99 - 4 + 1, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case 10:
-				inner_5node(j, i, 1, -(5 + Num8 - 1), Node_99 - 4 + 1, Coef, Coef_location);
-				break;
-			case (Num8 - 1) :// 1 lei xia 2j
-				kind1_node(j, i, -(5 + Num8 - 1), -(5 + Num8 - 1) + 1, -(5 + Num8 - 1) + 2, -1, 0,
-				Node_99 - 4 + 1, Node_99 - 4 + 1 + 1, Node_99 - 4 + 1 + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + 2); i++)// circle num9 :  72 node!  part1 !
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8)
-			{
-			case 0:
-				boundary_node(j, i, 1, -Num5 - Num6 - Num7 - Num8, Num9 + Num8 + Num7 + Num6, Coef, Coef_location);
-				break;
-			case (N_d0 - 3) ://2 lei shang 1j
-				kind2_node(j, i, -Num5 - Num6 - Num7 - Num8, -2, -1, 0, 1, Num9 + Num8 + Num7 + Num6,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (N_d0 + 1) :// 2 lei 2j shang
-				kind2_node(j, i, -(Num7 + Num8 + N_d0 - 2), -2, -1, 0, 1, Num9 - N_d0 + 2 + Num8,
-				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node91:// inner 4 node
-				inner_4node(j, i, -(Num8 + N_d0 + 2), -1, 0, Num9 - N_d0 - 2, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node91 + 1) :// inner 4 node
-				inner_4node(j, i, -(Num8 + N_d0 + 2), 0, 1, Num9 - N_d0 - 2, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Node_9 - 3) ://2 lei xia 2j
-				kind2_node(j, i, -(Num7 / 2 + 1 + Num8 + Node_9), -1, 0, 1, 2, Num9 - Node_9 + Num8 + Num7 / 2 - 1,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Node_9 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -(Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9), -1, 0, 1, 2, Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) < (N_d0 - 3))// 4dx!
-				{
-					inner_5node(j, i, 4, -Num5 - Num6 - Num7 - Num8, Num9 + Num8 + Num7 + Num6, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) < (N_d0 + 1)))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num7 + Num8 + N_d0 - 2), Num9 - N_d0 + 2 + Num8, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) > (N_d0 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) < Node91))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num8 + N_d0 + 2), Num9 - N_d0 - 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) > (Node91 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) < (Node_9 - 3)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num8 + N_d0 + 2), Num9 - N_d0 - 2, Coef, Coef_location);
-				}
-				else// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num7 / 2 + 1 + Num8 + Node_9), Num9 - Node_9 + Num8 + Num7 / 2 - 1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + 2);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Num9); i++)// circle num9 :  72 node!  part2 !
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8)
-			{
-			case (Num9 - 1) :
-				boundary_node(j, i, 2, -Num6 - Num7 - Num8 - Num9, Num8 + Num7 + Num6 + Num5, Coef, Coef_location);
-				break;
-			case (Node_9 + N_a - 4) ://2 lei shang 1j
-				kind2_node(j, i, -(Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9), -2, -1, 0, 1, Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_9 + N_a) :// 2 lei 2j shang
-				kind2_node(j, i, -(Num7 / 2 + Num8 + Node_9 + N_a - 3), -2, -1, 0, 1, Num9 - Node_9 - N_a + 3 + Num8 + Num7 / 2,
-				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node92:// inner 4 node
-				inner_4node(j, i, -(Node_99 - 4 + 1), -1, 0, Num9 - Node_99 + 4 + Num8 - 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node92 + 1) :// inner 4 node
-				inner_4node(j, i, -(Node_99 - 4 + 1), 0, 1, Num9 - Node_99 + 4 + Num8 - 1, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Node_99 - 3) ://2 lei xia 2j
-				kind2_node(j, i, -(Num8 + Node_99 + 1), -1, 0, 1, 2, Num9 - Node_99 + Num8 + Num7 - 1,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Node_99 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -Num6 - Num7 - Num8 - Num9, -1, 0, 1, 2, Num8 + Num7 + Num6 + Num5,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) < (Node_9 + N_a - 4))// 4dx!
-				{
-					inner_5node(j, i, 4, -(Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9), Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) > (Node_9 + N_a - 4)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) < (Node_9 + N_a)))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num7 / 2 + Num8 + Node_9 + N_a - 3), Num9 - Node_9 - N_a + 3 + Num8 + Num7 / 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) > (Node_9 + N_a)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) < Node92))// 1dx
-				{
-					inner_5node(j, i, 1, -(Node_99 - 4 + 1), Num9 - Node_99 + 4 + Num8 - 1, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) > (Node92 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) < (Node_99 - 3)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Node_99 - 4 + 1), Num9 - Node_99 + 4 + Num8 - 1, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) > (Node_99 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8) < (Node_99 + 1)))// 2dx
-				{
-					inner_5node(j, i, 2, -(Num8 + Node_99 + 1), Num9 - Node_99 + Num8 + Num7 - 1, Coef, Coef_location);
-				}
-				else// 4dx!
-				{
-					inner_5node(j, i, 4, -Num6 - Num7 - Num8 - Num9, Num8 + Num7 + Num6 + Num5, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Num9);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 * 2 + Num9); i++)// num 10(8) :  12 node! 
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 - Num9)
-			{
-			case 0:// 1 lei shang 2j
-				kind1_node(j, i, -(Num9 - N_d0 - 2) - 2, -(Num9 - N_d0 - 2) - 1, -(Num9 - N_d0 - 2), 0, 1, Num8 + 4 - 2, Num8 + 4 - 1, Num8 + 4,
-					A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case 1:
-				inner_5node(j, i, 1, -(Num9 - N_d0 - 2), Num8 + 4, Coef, Coef_location);
-				break;
-			case 2://inner 4 node
-				inner_4node(j, i, -(Num9 - N_d0 - 2), -1, 0, Num8 + 4, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case 3://inner 4 node
-				inner_4node(j, i, -(Num9 - N_d0 - 2), 0, 1, Num8 + 4, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case 4:
-				inner_5node(j, i, 1, -(Num9 - N_d0 - 2), Num8 + 4, Coef, Coef_location);
-				break;
-			case (Num8 / 2 - 1) :// 1 lei xia 2j
-				kind1_node(j, i, -(Num9 - N_d0 - 2), -(Num9 - N_d0 - 2) + 1, -(Num9 - N_d0 - 2) + 2, -1, 0, Num8 + 4, Num8 + 4 + 1, Num8 + 4 + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			case (Num8 / 2) :// 1 lei shang 2j
-				kind1_node(j, i, -(Num9 - Node_99 + 4 + Num8 - 1) - 2, -(Num9 - Node_99 + 4 + Num8 - 1) - 1, -(Num9 - Node_99 + 4 + Num8 - 1), 0, 1,
-				Num7 - 4 - 2, Num7 - 4 - 1, Num7 - 4, A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case 7:
-				inner_5node(j, i, 1, -(Num9 - Node_99 + 4 + Num8 - 1), Num7 - 4, Coef, Coef_location);
-				break;
-			case 8://inner 4 node
-				inner_4node(j, i, -(Num9 - Node_99 + 4 + Num8 - 1), -1, 0, Num7 - 4, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case 9://inner 4 node
-				inner_4node(j, i, -(Num9 - Node_99 + 4 + Num8 - 1), 0, 1, Num7 - 4, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case 10:
-				inner_5node(j, i, 1, -(Num9 - Node_99 + 4 + Num8 - 1), Num7 - 4, Coef, Coef_location);
-				break;
-			case (Num8 - 1) :// 1 lei xia 2j
-				kind1_node(j, i, -(Num9 - Node_99 + 4 + Num8 - 1), -(Num9 - Node_99 + 4 + Num8 - 1) + 1, -(Num9 - Node_99 + 4 + Num8 - 1) + 2, -1, 0,
-				Num7 - 4, Num7 - 4 + 1, Num7 - 4 + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 * 2 + Num9);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 * 2 + Num9 + Num7 / 2); i++)// num 11(7) :  28 node! part1
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9)
-			{
-			case 0:// 1 lei 1j shang
-				kind1_node(j, i, -(Num9 - N_d0 + 2 + Num8) - 2, -(Num9 - N_d0 + 2 + Num8) - 1, -(Num9 - N_d0 + 2 + Num8), 0, 1,
-					Num7 + Num6 + N_d0 - 2 - 2, Num7 + Num6 + N_d0 - 2 - 1, Num7 + Num6 + N_d0 - 2,
-					A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case 3:// 2 lei 2j shang
-				kind2_node(j, i, -(Num9 - N_d0 + 2 + Num8), -2, -1, 0, 1, Num7 + Num6 + N_d0 - 2,
-					B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node71://inner 4 node
-				inner_4node(j, i, -(Num8 + 4), -1, 0, Num7 - 4, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node71 + 1) ://inner 4 node
-				inner_4node(j, i, -(Num8 + 4), 0, 1, Num7 - 4 + 2, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Num7 / 2 - 4) :// 2 lei 2j xia
-				kind2_node(j, i, -(Num9 - Node_9 + Num8 + Num7 / 2 - 1), -1, 0, 1, 2, Num7 / 2 + 1 + Num6 + Node_5,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Num7 / 2 - 1) :// 1 lei 1j xia
-				kind1_node(j, i, -(Num9 - Node_9 + Num8 + Num7 / 2 - 1), -(Num9 - Node_9 + Num8 + Num7 / 2 - 1) + 1, -(Num9 - Node_9 + Num8 + Num7 / 2 - 1) + 2, -1, 0,
-				Num7 / 2 + 1 + Num6 + Node_5, Num7 / 2 + 1 + Num6 + Node_5 + 1, Num7 / 2 + 1 + Num6 + Node_5 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) < 3)// 2dx
-				{
-					inner_5node(j, i, 2, -(Num9 - N_d0 + 2 + Num8), Num7 + Num6 + N_d0 - 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) > 3) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) < (Node71)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num8 + 4), Num7 - 4, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) > (Node71 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) < (Num7 / 2 - 4)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num8 + 4), Num7 - 4 + 2, Coef, Coef_location);
-				}
-				else// 2dx
-				{
-					inner_5node(j, i, 2, -(Num9 - Node_9 + Num8 + Num7 / 2 - 1), Num7 / 2 + 1 + Num6 + Node_5, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 * 2 + Num9 + Num7 / 2);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 * 2 + Num8 * 2 + Num9); i++)// num 11(7) :  28 node! part2
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9)
-			{
-			case (Num7 / 2) :// 1 lei 1j shang
-				kind1_node(j, i, -(Num9 - Node_9 - N_a + 3 + Num8 + Num7 / 2) - 2, -(Num9 - Node_9 - N_a + 3 + Num8 + Num7 / 2) - 1, -(Num9 - Node_9 - N_a + 3 + Num8 + Num7 / 2), 0, 1,
-				Num7 / 2 + Num6 + Node_5 + N_a - 3 - 2, Num7 / 2 + Num6 + Node_5 + N_a - 3 - 1, Num7 / 2 + Num6 + Node_5 + N_a - 3,
-				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case (Num7 / 2 + 3) :// 2 lei 2j shang
-				kind2_node(j, i, -(Num9 - Node_9 - N_a + 3 + Num8 + Num7 / 2), -2, -1, 0, 1, Num7 / 2 + Num6 + Node_5 + N_a - 3,
-				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node72://inner 4 node
-				inner_4node(j, i, -(Num7 - 5 + 1), -1, 0, 5 + Num6 - 1 - 2, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node72 + 1) ://inner 4 node
-				inner_4node(j, i, -(Num7 - 5 + 1), 0, 1, 5 + Num6 - 1, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Num7 - 4) :// 2 lei 2j xia
-				kind2_node(j, i, -(Num9 - Node_99 + Num8 + Num7 - 1), -1, 0, 1, 2, 1 + Num6 + Node_55,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Num7 - 1) :// 1 lei 1j xia
-				kind1_node(j, i, -(Num9 - Node_99 + Num8 + Num7 - 1), -(Num9 - Node_99 + Num8 + Num7 - 1) + 1, -(Num9 - Node_99 + Num8 + Num7 - 1) + 2, -1, 0,
-				1 + Num6 + Node_55, 1 + Num6 + Node_55 + 1, 1 + Num6 + Node_55 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) < (Num7 / 2 + 3))// 2dx
-				{
-					inner_5node(j, i, 2, -(Num9 - Node_9 - N_a + 3 + Num8 + Num7 / 2), Num7 / 2 + Num6 + Node_5 + N_a - 3, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) > (Num7 / 2 + 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) < (Node72)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num7 - 5 + 1), 5 + Num6 - 1 - 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) > (Node72 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 - Num8 * 2 - Num9) < (Num7 - 4)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num7 - 5 + 1), 5 + Num6 - 1, Coef, Coef_location);
-				}
-				else// 2dx
-				{
-					inner_5node(j, i, 2, -(Num9 - Node_99 + Num8 + Num7 - 1), 1 + Num6 + Node_55, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 * 2 + Num8 * 2 + Num9);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num 12(6) :  16 node!
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 * 2 - Num8 * 2 - Num9)
-			{
-			case 0:// 1 lei 2j shang
-				kind1_node(j, i, -(Num7 - 4) - 2, -(Num7 - 4) - 1, -(Num7 - 4), 0, 1, Num6 + N_d0 + 2 - 2, Num6 + N_d0 + 2 - 1, Num6 + N_d0 + 2,
-					A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case Node61:// inner 3 node
-				inner_3node(j, i, -1, 0, (Num6 + N_d0 + 2), 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node61 + 1) :// inner 3 node
-				inner_3node(j, i, 0, 1, (Num6 + N_d0 + 2) + 2, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Num6 / 2 - 1) :// 1 lei 2j xia
-				kind1_node(j, i, (-(Num7 - 4) - 2), (-(Num7 - 4) - 2) + 1, (-(Num7 - 4) - 2) + 2, -1, 0,
-				(Num6 + N_d0 + 2) + 2, (Num6 + N_d0 + 2) + 2 + 1, (Num6 + N_d0 + 2) + 2 + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			case (Num6 / 2) :// 1 lei 2j shang
-				kind1_node(j, i, -(5 + Num6 - 1) + 2 - 2, -(5 + Num6 - 1) + 2 - 1, -(5 + Num6 - 1) + 2, 0, 1,
-				(Node_55 - 4 + 1) - 2 - 2, (Node_55 - 4 + 1) - 2 - 1, (Node_55 - 4 + 1) - 2,
-				A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case Node62:// inner 3 node
-				inner_3node(j, i, -1, 0, (Node_55 - 4 + 1) - 2, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node62 + 1) :// inner 3 node
-				inner_3node(j, i, 0, 1, (Node_55 - 4 + 1), k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Num6 - 1) :// 1 lei 2j xia
-				kind1_node(j, i, -(5 + Num6 - 1), -(5 + Num6 - 1) + 1, -(5 + Num6 - 1) + 2, -1, 0,
-				(Node_55 - 4 + 1), (Node_55 - 4 + 1) + 1, (Node_55 - 4 + 1) + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 * 2 - Num8 * 2 - Num9) < Node61)// 1dx
-				{
-					inner_5node(j, i, 1, -(Num7 - 4), Num6 + N_d0 + 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 * 2 - Num8 * 2 - Num9) > (Node61 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 * 2 - Num8 * 2 - Num9) < (Num6 / 2 - 1)))// 2dx
-				{
-					inner_5node(j, i, 1, -(Num7 - 4) - 2, (Num6 + N_d0 + 2) + 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 * 2 - Num8 * 2 - Num9) > (Num6 / 2)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 - Num7 * 2 - Num8 * 2 - Num9) < Node62))// 2dx
-				{
-					inner_5node(j, i, 1, -(5 + Num6 - 1) + 2, (Node_55 - 4 + 1) - 2, Coef, Coef_location);
-				}
-				else// 1dx 4_node
-				{
-					inner_5node(j, i, 1, -(5 + Num6 - 1), (Node_55 - 4 + 1), Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + 2); i++)// circle num13(5) :  80 node!  part1 !
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
-			{
-			case 0:
-				boundary_node(j, i, 1, -Num9 - Num8 - Num7 - Num6, Num5 + Num4 + Num3 + Num2, Coef, Coef_location);
-				break;
-			case (N_d0 - 3) ://2 lei shang 1j
-				kind2_node(j, i, -Num9 - Num8 - Num7 - Num6, -2, -1, 0, 1, Num5 + Num4 + Num3 + Num2,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (N_d0 + 1) :// 2 lei 2j shang
-				kind2_node(j, i, -(Num7 + Num6 + N_d0 - 2), -2, -1, 0, 1, Num5 - N_d0 + 2 + Num4,
-				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node51:// inner 3 node
-				inner_3node(j, i, -1, 0, (Num5 - N_d0 - 2), 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node51 + 1) :// inner 3 node
-				inner_3node(j, i, 0, 1, (Num5 - N_d0 - 2) + N_c1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Node_5 - 3) ://2 lei xia 2j
-				kind2_node(j, i, -(Num7 / 2 + 1 + Num6 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num4 + Num3 / 2 - 1,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Node_5 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -(Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (N_d0 - 3))// 4dx!
-				{
-					inner_5node(j, i, 4, -Num9 - Num8 - Num7 - Num6, Num5 + Num4 + Num3 + Num2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (N_d0 + 1)))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num7 + Num6 + N_d0 - 2), Num5 - N_d0 + 2 + Num4, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (N_d0 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < Node51))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num6 + N_d0 + 2), (Num5 - N_d0 - 2), Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node51 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_5 - 3)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num6 + N_d0 + 2) - 2, (Num5 - N_d0 - 2) + N_c1, Coef, Coef_location);
-				}
-				else// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num7 / 2 + 1 + Num6 + Node_5), Num5 - Node_5 + Num4 + Num3 / 2 - 1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + 2);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// circle num13(5) :  80 node!  part2 !
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
-			{
-			case (Num5 - 1) :
-				boundary_node(j, i, 2, -Num8 - Num7 - Num6 - Num5, Num4 + Num3 + Num2 + Num1, Coef, Coef_location);
-				break;
-			case (Node_5 + N_a - 4) ://2 lei shang 1j
-				kind2_node(j, i, -(Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5), -2, -1, 0, 1, Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_5 + N_a) :// 2 lei 2j shang
-				kind2_node(j, i, -(Num7 / 2 + Num6 + Node_5 + N_a - 3), -2, -1, 0, 1, Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2,
-				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case Node52:// inner 3 node
-				inner_3node(j, i, -1, 0, (Num5 - Node_55 + 4 + Num4 - 1) - N_c1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
-				break;
-			case (Node52 + 1) :// inner 3 node
-				inner_3node(j, i, 0, 1, (Num5 - Node_55 + 4 + Num4 - 1), k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				break;
-			case (Node_55 - 3) ://2 lei xia 2j
-				kind2_node(j, i, -(Num6 + Node_55 + 1), -1, 0, 1, 2, Num5 - Node_55 + Num4 + Num3 - 1,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Node_55 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -Num8 - Num7 - Num6 - Num5, -1, 0, 1, 2, Num4 + Num3 + Num2 + Num1,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_5 + N_a - 4))// 4dx!
-				{
-					inner_5node(j, i, 4, -(Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5), Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node_5 + N_a - 4)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_5 + N_a)))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num7 / 2 + Num6 + Node_5 + N_a - 3), Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node_5 + N_a)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < Node52))// 1dx
-				{
-					inner_5node(j, i, 1, -(Node_55 - 4 + 1) + 2, (Num5 - Node_55 + 4 + Num4 - 1) - N_c1, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node52 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_55 - 3)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Node_55 - 4 + 1), (Num5 - Node_55 + 4 + Num4 - 1), Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node_55 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_55 + 1)))// 2dx
-				{
-					inner_5node(j, i, 2, -(Num6 + Node_55 + 1), Num5 - Node_55 + Num4 + Num3 - 1, Coef, Coef_location);
-				}
-				else// 4dx!
-				{
-					inner_5node(j, i, 4, -Num8 - Num7 - Num6 - Num5, Num4 + Num3 + Num2 + Num1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num4 / 2); i++)// num 14(4) :  30 node! part1
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
-			{
-			case 0:// 1 lei 2j shang
-				kind1_node(j, i, -(Num5 - N_d0 - 2) - 2, -(Num5 - N_d0 - 2) - 1, -(Num5 - N_d0 - 2), 0, 1, Num4 + 4 - 2, Num4 + 4 - 1, Num4 + 4,
-					A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case (Num4 / 2 - 1) :// 1 lei 2j xia
-				kind1_node(j, i, -(Num5 - N_d0 - 2) - N_c1, -(Num5 - N_d0 - 2) - N_c1 + 1, -(Num5 - N_d0 - 2) - N_c1 + 2, -1, 0,
-				Num4 + 4, Num4 + 4 + 1, Num4 + 4 + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) <= Node41)// 1dx
-				{
-					inner_5node(j, i, 1, -(Num5 - N_d0 - 2), Num4 + 4, Coef, Coef_location);
-				}
-				else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) >= Node42) // 1dx
-				{
-					inner_5node(j, i, 1, -(Num5 - N_d0 - 2) - N_c1, Num4 + 4, Coef, Coef_location);
-				}
-				else// 1dx 4_node
-				{
-					inner_4node(j, i, -1, 0, 1, Num4 + 4, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num4 / 2);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num14(4) :  30 node! part2
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
-			{
-			case (Num4 / 2) :// 1 lei 2j shang
-				kind1_node(j, i, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1 - 2, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1 - 1, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1, 0, 1,
-				(Num3 - 5 + 1) - 2, (Num3 - 5 + 1) - 1, (Num3 - 5 + 1),
-				A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
-				break;
-			case (Num4 - 1) :// 1 lei 2j xia
-				kind1_node(j, i, -(Num5 - Node_55 + 4 + Num4 - 1), -(Num5 - Node_55 + 4 + Num4 - 1) + 1, -(Num5 - Node_55 + 4 + Num4 - 1) + 2, -1, 0,
-				(Num3 - 5 + 1), (Num3 - 5 + 1) + 1, (Num3 - 5 + 1) + 2,
-				A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) <= Node43)// 1dx
-				{
-					inner_5node(j, i, 1, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1, (Num3 - 5 + 1), Coef, Coef_location);
-				}
-				else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) >= Node44) // 1dx
-				{
-					inner_5node(j, i, 1, -(Num5 - Node_55 + 4 + Num4 - 1), (Num3 - 5 + 1), Coef, Coef_location);
-				}
-				else// 1dx 4_node
-				{
-					inner_4node(j, i, -1, 0, 1, (Num3 - 5 + 1), 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num3 / 2); i++)// num 15(3) :  46 node! part1
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
-			{
-			case 0:// 1 lei 1j shang
-				kind1_node(j, i, -(Num5 - N_d0 + 2 + Num4) - 2, -(Num5 - N_d0 + 2 + Num4) - 1, -(Num5 - N_d0 + 2 + Num4), 0, 1,
-					Num3 + Num2 + N_d0 - 2 - 2, Num3 + Num2 + N_d0 - 2 - 1, Num3 + Num2 + N_d0 - 2,
-					A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case 3:// 2 lei 2j shang
-				kind2_node(j, i, -(Num5 - N_d0 + 2 + Num4), -2, -1, 0, 1, Num3 + Num2 + N_d0 - 2,
-					B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case 4:// 3 lei 2j shang
-				kind3_node(j, i, -(Num4 + 4), -1, 0, 1, (Num3 + Num2 + N_d0 - 2) - 1, (Num3 + Num2 + N_d0 - 2),
-					C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 5) :// 3 lei 2j xia
-				kind3_node(j, i, -(Num4 + 4), -1, 0, 1, Num3 / 2 + 1 + Num2 + Node_1, Num3 / 2 + 1 + Num2 + Node_1 + 1,
-				C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 4) :// 2 lei 2j xia
-				kind2_node(j, i, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1), -1, 0, 1, 2, Num3 / 2 + 1 + Num2 + Node_1,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 1) :// 1 lei 1j xia
-				kind1_node(j, i, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1), -(Num5 - Node_5 + Num4 + Num3 / 2 - 1) + 1, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1) + 2, -1, 0,
-				Num3 / 2 + 1 + Num2 + Node_1, Num3 / 2 + 1 + Num2 + Node_1 + 1, Num3 / 2 + 1 + Num2 + Node_1 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < 3)// 2dx
-				{
-					inner_5node(j, i, 2, -(Num5 - N_d0 + 2 + Num4), Num3 + Num2 + N_d0 - 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Num3 / 2 - 5)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num4 + 4), Num3 - 5, Coef, Coef_location);
-				}
-				else// 2dx
-				{
-					inner_5node(j, i, 2, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1), Num3 / 2 + 1 + Num2 + Node_1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num3 / 2);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num 15(3) :  46 node! part2
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2)
-			{
-			case 0:// 1 lei 1j shang
-				kind1_node(j, i, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2) - 2, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2) - 1, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2), 0, 1,
-					Num3 / 2 + Num2 + Node_1 + N_a - 3 - 2, Num3 / 2 + Num2 + Node_1 + N_a - 3 - 1, Num3 / 2 + Num2 + Node_1 + N_a - 3,
-					A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case 3:// 2 lei 2j shang
-				kind2_node(j, i, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2), -2, -1, 0, 1, Num3 / 2 + Num2 + Node_1 + N_a - 3,
-					B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
-				break;
-			case 4:// 3 lei 2j shang
-				kind3_node(j, i, -(Num3 - 5 + 1), -1, 0, 1, (Num3 / 2 + Num2 + Node_1 + N_a - 3) - 1, (Num3 / 2 + Num2 + Node_1 + N_a - 3),
-					C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 5) :// 3 lei 2j xia
-				kind3_node(j, i, -(Num3 - 5 + 1), -1, 0, 1, 1 + Num2 + Node_11, 1 + Num2 + Node_11 + 1,
-				C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 4) :// 2 lei 2j xia
-				kind2_node(j, i, -(Num5 - Node_55 + Num4 + Num3 - 1), -1, 0, 1, 2, 1 + Num2 + Node_11,
-				B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
-				break;
-			case (Num3 / 2 - 1) :// 1 lei 1j xia
-				kind1_node(j, i, -(Num5 - Node_55 + Num4 + Num3 - 1), -(Num5 - Node_55 + Num4 + Num3 - 1) + 1, -(Num5 - Node_55 + Num4 + Num3 - 1) + 2, -1, 0,
-				1 + Num2 + Node_11, 1 + Num2 + Node_11 + 1, 1 + Num2 + Node_11 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2) < 3)// 2dx
-				{
-					inner_5node(j, i, 2, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2), Num3 / 2 + Num2 + Node_1 + N_a - 3, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2) < (Num3 / 2 - 5)))// 1dx
-				{
-					inner_5node(j, i, 1, -(Num3 - 5 + 1), 6 + Num2 - 1, Coef, Coef_location);
-				}
-				else// 2dx
-				{
-					inner_5node(j, i, 2, -(Num5 - Node_55 + Num4 + Num3 - 1), 1 + Num2 + Node_11, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num2 / 2); i++)// num 16(2) :  26 node! part1
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
-			{
-			case 0:// 3 lei 2j shang
-				kind3_node(j, i, -(Num3 - 3), -(Num3 - 3) + 2, 0, 1, Num2 + Node11 - 1, Num2 + Node11,
-					C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
-				break;
-			case (Num2 / 2 - 1) ://node2: 3 lei 2j xia
-				kind3_node(j, i, -(Num3 - 5), -(Num3 - 5) + 2, -1, 0, Num2 / 2 + Node_1 - 4 + 1, Num2 / 2 + Node_1 - 4 + 1 + 1,
-				C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) % 2 == 0)// 1dx
-				{
-					inner_5node(j, i, 1, -(Num3 - 5),
-						(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2), Coef, Coef_location);
-				}
-				else//1 lei  2j left
-				{
-					kind1_node(j, i, -(Num3 - 5), -1, 0, 1,
-						(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2),
-						(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2) + 1,
-						(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2) + (Num1 - N_d0 + 2),
-						(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2) + 1 + (Num1 - N_d0 + 2),
-						A4_2, A3_2, A5_2, A3_2, A1_2, A1_2, A2_2, A2_2, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num2 / 2);
-			i<(Nx_2 + Nx_3 + Num1 + Num2 * 2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num 16(2) :  26 node! part2
-		{
-			switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2)
-			{
-			case 0:// 3 lei 2j shang
-				kind3_node(j, i, -(6 + Num2 - 1) - 2, -(6 + Num2 - 1), 0, 1, Num2 / 2 + Node13 - 1, Num2 / 2 + Node13,
-					C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
-				break;
-			case (Num2 / 2 - 1) :// 3 lei 2j xia
-				kind3_node(j, i, -(6 + Num2 - 1), -(6 + Num2 - 1) + 2, -1, 0, Node_11 - 4 + 1, Node_11 - 4 + 1 + 1,
-				C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) % 2 == 0)// 1dx
-				{
-					inner_5node(j, i, 1, -(6 + Num2 - 1), Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2,
-						Coef, Coef_location);
-				}
-				else//1 lei 2j left
-				{
-					kind1_node(j, i, -(6 + Num2 - 1), -1, 0, 1,
-						(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2),
-						(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2) + 1,
-						(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2) + (Num1 - Node_11 + Nx_3 - 1),
-						(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2) + 1 + (Num1 - Node_11 + Nx_3 - 1),
-						A4_2, A3_2, A5_2, A3_2, A1_2, A1_2, A2_2, A2_2, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (num_total - Nx_2 - Nx_3 - Num1); i<(num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i++)// circle num17(1) Nx_2:  74 node!  part1 !
-		{
-			switch (i - num_total + Nx_2 + Nx_3 + Num1)
-			{
-			case 0:
-				boundary_node(j, i, 1, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
-				break;
-			case (N_d0 - 3) ://2 lei shang 1j
-				kind2_node(j, i, -Num5 - Num4 - Num3 - Num2, -2, -1, 0, 1, Nx_2 + Nx_3,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_1 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -1, 0, 1, 2, Nx_2 + Nx_3,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - num_total + Nx_2 + Nx_3 + Num1) < (N_d0 - 3))// 4dx!
-				{
-					inner_5node(j, i, 4, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (N_d0 - 3)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node11))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num3 + Num2 + N_d0 - 2), Num1 - N_d0 + 2, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node11) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node12))// 2 lei right 2j !
-				{
-					kind2_node(j, i, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node11) * 2),
-						-1, 0, 1, Num1 - N_d0 + 2, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
-				}
-				else// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num3 / 2 + 1 + Num2 + Node_1), Num1 - N_d0 + 2, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i<(num_total - Nx_2 - Nx_3); i++)// circle num17(1) Nx_2:  74 node!  part2 !
-		{
-			switch (i - num_total + Nx_2 + Nx_3 + Num1)
-			{
-			case (Num1 - 1) :
-				boundary_node(j, i, 2, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);
-				break;
-			case (Node_1 + N_a - 4) ://2 lei shang 1j
-				kind2_node(j, i, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -2, -1, 0, 1, Nx_2 + Nx_3,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_11 + 1) ://2 lei xia 1j
-				kind2_node(j, i, -Num1 - Num2 - Num3 - Num4, -1, 0, 1, 2, Nx_2 + Nx_3,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - num_total + Nx_2 + Nx_3 + Num1) < (Node_1 + N_a - 4))// 4dx!
-				{
-					inner_5node(j, i, 4, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), Nx_2 + Nx_3, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (Node_1 + N_a - 4)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node13))// 2dx!
-				{
-					inner_5node(j, i, 2, -(Num3 / 2 + Num2 + Node_1 + N_a - 3), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node13) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node14))// 2 lei left 2j !
-				{
-					kind2_node(j, i, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 / 2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node13) * 2),
-						-1, 0, 1, Num1 - Node_11 + Nx_3 - 1, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
-				}
-				else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node14) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node_11))// 2dx
-				{
-					inner_5node(j, i, 2, -(Num2 + Node_11 + 1), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
-				}
-				else
-				{
-					inner_5node(j, i, 4, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);// 4dx!
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//******************************************************************************************
-		for (i = (num_total - Nx_2 - Nx_3); i<(num_total - Nx_2); i++)//right1 Nx_3:  30 node! 
-		{
-			switch (i - num_total + Nx_2 + Nx_3)
-			{
-			case 0:// 1 lei shang
-				kind1_node(j, i, -(Nx_2 - N_d0 + 2) - 2, -(Nx_2 - N_d0 + 2) - 1, -(Nx_2 - N_d0 + 2), 0, 1, Nx_3 + N_d0 - 2 - 2, Nx_3 + N_d0 - 2 - 1, Nx_3 + N_d0 - 2,
-					A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case (Nx_3 / 2 - 1) :// 1 lei xia
-				kind1_node(j, i, -(Nx_2 - N_d0 + 2), -(Nx_2 - N_d0 + 2) + 1, -(Nx_2 - N_d0 + 2) + 2, -1, 0,
-				Nx_3 + N_d0 - 2, Nx_3 + N_d0 - 2 + 1, Nx_3 + N_d0 - 2 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			case (Nx_3 / 2) :// 1 lei shang
-				kind1_node(j, i, -(Nx_2 - Node_11 - 1 + Nx_3) - 2, -(Nx_2 - Node_11 - 1 + Nx_3) - 1, -(Nx_2 - Node_11 - 1 + Nx_3), 0, 1,
-				1 + Node_11 - 2, 1 + Node_11 - 1, 1 + Node_11,
-				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
-				break;
-			case (Nx_3 - 1) :// 1 lei xia
-				kind1_node(j, i, -(Nx_2 - Node_11 - 1 + Nx_3), -(Nx_2 - Node_11 - 1 + Nx_3) + 1, -(Nx_2 - Node_11 - 1 + Nx_3) + 2, -1, 0,
-				1 + Node_11, 1 + Node_11 + 1, 1 + Node_11 + 2,
-				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
-				break;
-			default:
-				if ((i - num_total + Nx_2 + Nx_3) < (Nx_3 / 2 - 1))
-				{
-					inner_5node(j, i, 2, -(Nx_2 - N_d0 + 2), Nx_3 + N_d0 - 2, Coef, Coef_location);
-				}
-				else
-				{
-					inner_5node(j, i, 2, -(Nx_2 - Node_11 - 1 + Nx_3), 1 + Node_11, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		//cout << "offset1 start:" << j << endl;
-		//***************************************************************************************
-		//cout << "circle num1:" << j << endl;
-		for (i = (Nx_2 + Nx_3); i<(Nx_2 + Nx_3 + Node_1 + 2); i++)// circle num1 Nx_2:  74 node!  part1 !
-		{
-			switch (i - Nx_2 - Nx_3)
-			{
-			case 0:
-				boundary_node(j, j - offset, 1, -Nx_2 - Nx_3, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
-				break;
-			case (N_d0 - 3) ://2 lei shang 1j
-				kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 + Num2 + Num3 + Num4,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_1 + 1) ://2 lei xia 1j
-				kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3) < (N_d0 - 3))// 4dx!
-				{
-					inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3) < Node11))// 2dx!
-				{
-					inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - N_d0 + 2 + Num2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) >= Node11) && ((i - Nx_2 - Nx_3) <= Node12))// 2 lei left 2j !
-				{
-					kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Nx_3 + N_d0 - 2), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + ((i - Nx_2 - Nx_3) - Node11) * 2,
-						B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
-				}
-				else// 2dx!
-				{
-					inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - Node_1 + Num2 + Num3 / 2 - 1, Coef, Coef_location);
-				}
-				break;
-			}
-			j = j + 1;
-		}
-		for (i = (Nx_2 + Nx_3 + Node_1 + 2); i<(Nx_2 + Nx_3 + Num1); i++)// circle num1 Nx_2:  74 node!  part2 !
-		{
-			switch (i - Nx_2 - Nx_3)
-			{
-			case (Num1 - 1) :
-				boundary_node(j, j - offset, 2, -Nx_2 - Nx_3, Num5 + Num2 + Num3 + Num4, Coef, Coef_location);
-				break;
-			case (Node_1 + N_a - 4) ://2 lei shang 1j
-				kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
-				B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
-				break;
-			case (Node_11 + 1) ://2 lei xia 1j
-				kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num5 + Num2 + Num3 + Num4,
-				B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
-				break;
-			default:
-				if ((i - Nx_2 - Nx_3) < (Node_1 + N_a - 4))// 4dx!
-				{
-					inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) > (Node_1 + N_a - 4)) && ((i - Nx_2 - Nx_3) < Node13))// 2dx!
-				{
-					inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) >= Node13) && ((i - Nx_2 - Nx_3) <= Node14))// 2 lei left 2j !
-				{
-					kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Node_11 + 1), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + Num2 / 2 + ((i - Nx_2 - Nx_3) - Node13) * 2,
-						B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
-				}
-				else if (((i - Nx_2 - Nx_3) >= Node14) && ((i - Nx_2 - Nx_3) <= Node_11))// 2dx
-				{
-					inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_11 + Num2 + Num3 - 1, Coef, Coef_location);
-				}
-				else
-				{
-					inner_5node(j, j - offset, 4, -(Nx_3 + Nx_2), Num5 + Num2 + Num3 + Num4, Coef, Coef_location);// 4dx!
-				}
-				break;
-			}
-			j = j + 1;
-		}
-
-	}
+	//left 1 --- right 1
+	scan_coef_Matrix_middle_wrapper(j, Coef, Coef_location, num_total, sizeN - 2 * Num1, offset);
 	//=======================================================================================================================
+	//***************************************************************************************
+	//cout << "circle num1:" << j << endl;
+	for (i = (Nx_2 + Nx_3); i<(Nx_2 + Nx_3 + Node_1 + 2); i++)// circle num1 Nx_2:  74 node!  part1 !
+	{
+		switch (i - Nx_2 - Nx_3)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Nx_2 - Nx_3, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 + Num2 + Num3 + Num4,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3) < Node11))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - N_d0 + 2 + Num2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node11) && ((i - Nx_2 - Nx_3) <= Node12))// 2 lei left 2j !
+			{
+				kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Nx_3 + N_d0 - 2), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + ((i - Nx_2 - Nx_3) - Node11) * 2,
+					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - Node_1 + Num2 + Num3 / 2 - 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Node_1 + 2); i<(Nx_2 + Nx_3 + Num1); i++)// circle num1 Nx_2:  74 node!  part2 !
+	{
+		switch (i - Nx_2 - Nx_3)
+		{
+		case (Num1 - 1) :
+			boundary_node(j, j - offset, 2, -Nx_2 - Nx_3, Num5 + Num2 + Num3 + Num4, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_11 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num5 + Num2 + Num3 + Num4,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3) < (Node_1 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) > (Node_1 + N_a - 4)) && ((i - Nx_2 - Nx_3) < Node13))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node13) && ((i - Nx_2 - Nx_3) <= Node14))// 2 lei left 2j !
+			{
+				kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Node_11 + 1), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + Num2 / 2 + ((i - Nx_2 - Nx_3) - Node13) * 2,
+					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node14) && ((i - Nx_2 - Nx_3) <= Node_11))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_11 + Num2 + Num3 - 1, Coef, Coef_location);
+			}
+			else
+			{
+				inner_5node(j, j - offset, 4, -(Nx_3 + Nx_2), Num5 + Num2 + Num3 + Num4, Coef, Coef_location);// 4dx!
+			}
+			break;
+		}
+		j = j + 1;
+	}
 	//******************************************************************************************!!!!!!!!!!
 	//cout << "circle num 2:" << j << endl;
 	for (i = (Nx_2 + Nx_3 + Num1); i<(Nx_2 + Nx_3 + Num1 + Num2 / 2); i++)// num 2 :  26 node! part1
@@ -5877,7 +4283,7 @@ void scan_coef_Matrix_middle(complex** Coef, int num_total, int ** Coef_location
 		j = j + 1;
 	}
 	//**************************************************************
-	cout << "middle nodes:" << j << endl;
+	cout << "middle区域节点数:" << j << endl;
 	if (j == sizeM)
 		cout << "middle passed..." << endl;
 	else
@@ -5913,6 +4319,3614 @@ void scan_coef_Matrix_middle(complex** Coef, int num_total, int ** Coef_location
 	}
 
 };
+void scan_coef_Matrix_middle_1(complex** Coef, int num_total, int ** Coef_location, int sizeM, int sizeN, int offset)
+{
+	int i = 0, j = 0, m = 0;
+	for (j = 0; j<num_total; j++)         //系数矩阵初始置零
+	{
+		for (i = 0; i<N_matrix; i++)
+		{
+			Coef[j][i].real = 0;
+			Coef[j][i].image = 0;
+			Coef_location[j][i] = -1;//初始化为负值
+		}
+	}
+	j = 0;
+	//系数矩阵扫描
+	//****************************************************************************************!!!
+	for (i = (Nx_side*N_d1); i<(Nx_side*N_d1 + Nx_side); i++)//middle right ,one line
+	{
+		switch (i - Nx_side*N_d1)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Nx_side, Nx_side + Nx_1, Coef, Coef_location);
+			break;
+		case (Nx_side - 1) :
+			boundary_node(j, j - offset, 2, -Nx_side, Nx_2 + Nx_1, Coef, Coef_location);
+			break;
+		case (N_d0 - 2) :// 2 lei
+			kind2_node(j, j - offset, -Nx_side * 2, -Nx_side, -1, 0, 1, Nx_side - N_d0 + 2,
+			B5, B4, B3, B1_1, B3, B2, Coef, Coef_location);
+			break;
+		case (N_d0 - 1) :// 2 lei缺一点
+			other_5_node(j, j - offset, -2 * Nx_side, -Nx_side, -1, 0, (Nx_side - N_d0 + 1 + 2),
+			B5, B4, B3, B1_1, B2, Coef, Coef_location);
+			break;
+		case N_d0:// 2 lei缺一点
+			other_5_node(j, j - offset, -2 * Nx_side, -Nx_side, 0, 1, (Nx_side - N_d0 + Nx_1 / 2 - 3),
+				B5, B4, B1_1, B3, B2, Coef, Coef_location);
+			break;
+		case (N_d0 + 1) :// 2 lei
+			kind2_node(j, j - offset, -Nx_side * 2, -Nx_side, -1, 0, 1, Nx_side - N_d0 - 1 + Nx_1 / 2 - 1,
+			B5, B4, B3, B1_1, B3, B2, Coef, Coef_location);
+			break;
+		case (N_d0 + N_a - 2) :// 2 lei
+			kind2_node(j, j - offset, -Nx_side * 2, -Nx_side, -1, 0, 1, (Nx_side - N_d0 - N_a + 2 + Nx_1 / 2),
+			B5, B4, B3, B1_1, B3, B2, Coef, Coef_location);
+			break;
+		case (N_d0 + N_a - 1) :// 2 lei缺一点
+			other_5_node(j, j - offset, -2 * Nx_side, -Nx_side, -1, 0, (Nx_side - N_d0 - N_a + 1 + Nx_1 / 2 + 2),
+			B5, B4, B3, B1_1, B2, Coef, Coef_location);
+			break;
+		case (N_d0 + N_a) :// 2 lei缺一点
+			other_5_node(j, j - offset, -2 * Nx_side, -Nx_side, 0, 1, (Nx_side - N_d0 - N_a + Nx_1 - 3),
+			B5, B4, B1_1, B3, B2, Coef, Coef_location);
+			break;
+		case (N_d0 + N_a + 1) :// 2 lei
+			kind2_node(j, j - offset, -Nx_side * 2, -Nx_side, -1, 0, 1, (Nx_side - N_d0 - N_a - 1 + Nx_1 - 1),
+			B5, B4, B3, B1_1, B3, B2, Coef, Coef_location);
+			break;
+		default:// 4dx
+			if ((i - Nx_side*N_d1) < (N_d0 - 2))//up
+			{
+				inner_5node(j, j - offset, 4, -Nx_side, Nx_side + Nx_1, Coef, Coef_location);
+			}
+			else if ((i - Nx_side*N_d1) > (N_d0 + N_a + 1))//down
+			{
+				inner_5node(j, j - offset, 4, -Nx_side, Nx_2 + Nx_1, Coef, Coef_location);
+			}
+			else//middle
+			{
+				inner_5node(j, j - offset, 4, -Nx_side, Nx_side - N_d0 - 1 + Nx_1 + Node_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//**********************************************************************************************
+	for (i = (Nx_side*N_d1 + Nx_side); i<(Nx_side*N_d1 + Nx_side + Nx_1 / 2); i++)//right1 Nx_1: 26 node part1
+	{
+		switch (i - Nx_side*N_d1 - Nx_side)
+		{
+		case 0:// 3 lei
+			kind3_node(j, j - offset, -(Nx_side - N_d0 + 2) - 1, -(Nx_side - N_d0 + 2), 0, 1, Nx_1 + N_d0 - 3, Nx_1 + N_d0 - 1,
+				C4, C3_1, C1_1, C2_1, C4, C3_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 1) ://node2: 3 lei
+			kind3_node(j, j - offset, -(Nx_side - N_d0 - 1 + Nx_1 / 2 - 1), -(Nx_side - N_d0 - 1 + Nx_1 / 2 - 1) + 1, -1, 0, Nx_1 + N_d0 - 1, Nx_1 + N_d0 - 1 + 2,
+			C3_1, C4, C2_1, C1_1, C3_1, C4, Coef, Coef_location);
+			break;
+		case 1:// 1 lei
+			kind1_node(j, j - offset, -(Nx_side * 2 - N_d0 + 2 + 1), -(Nx_side * 2 - N_d0 + 2 + 1) + 1, -(Nx_side - N_d0 + 2 + 1), -(Nx_side - N_d0 + 2), -1, 0, 1, Nx_1 + N_d0 - 1,
+				A2_1, A2_1, A1_1, A1_1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			break;
+		case 2:// 5 node 2dx
+			inner_5node(j, j - offset, 2, -(Nx_side - N_d0 + 1 + 2), Nx_1 + N_d0 - 1, Coef, Coef_location);
+			break;
+		case 3:// 1 lei que 2 dian
+			kind2_node(j, j - offset, -(Nx_side - N_d0 + 1 + 3) - Nx_side, -(Nx_side - N_d0 + 1 + 3), -1, 0, 1,
+				Nx_1 + N_d0 - 1, A2_1, A1_1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 4) :// 1 lei que 2 dian
+			kind2_node(j, j - offset, -(Nx_side - N_d0 + Nx_1 / 2 - 4) - Nx_side, -(Nx_side - N_d0 + Nx_1 / 2 - 4), -1, 0, 1,
+			Nx_1 + N_d0 - 1, A2_1, A1_1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 3) :// 5 node 2dx
+			inner_5node(j, j - offset, 2, -(Nx_side - N_d0 + Nx_1 / 2 - 3), Nx_1 + N_d0 - 1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 2) :// 1 lei
+			kind1_node(j, j - offset, -(Nx_side * 2 - N_d0 + Nx_1 / 2 - 2), -(Nx_side * 2 - N_d0 + Nx_1 / 2 - 2) + 1, -(Nx_side - N_d0 + Nx_1 / 2 - 2), -(Nx_side - N_d0 + Nx_1 / 2 - 2) + 1,
+			-1, 0, 1, Nx_1 + N_d0 - 1,
+			A2_1, A2_1, A1_1, A1_1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_side*N_d1 - Nx_side) % 2 == 0)
+			{
+				inner_4node(j, j - offset, -1, 0, 1, Nx_1 + N_d0 - 1, 1, k*k * 4 * dx*dx - 4, 1, 1, Coef, Coef_location);
+			}
+			else// 1 lei que 4 dian
+			{
+				inner_4node(j, j - offset, -1, 0, 1, Nx_1 + N_d0 - 1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_side*N_d1 + Nx_side + Nx_1 / 2); i<(Nx_side*N_d1 + Nx_side + Nx_1); i++)// Nx_1 :  26 node! part2
+	{
+		switch (i - Nx_side*N_d1 - Nx_side - Nx_1 / 2)
+		{
+		case 0:// 3 lei
+			kind3_node(j, j - offset, -(Nx_side - N_d0 - N_a + 2 + Nx_1 / 2) - 1, -(Nx_side - N_d0 - N_a + 2 + Nx_1 / 2), 0, 1, Node_11 - 2, Node_11,
+				C4, C3_1, C1_1, C2_1, C4, C3_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 1) :// 3 lei
+			kind3_node(j, j - offset, -(Nx_side - N_d0 - N_a + Nx_1 - 2), -(Nx_side - N_d0 - N_a + Nx_1 - 2) + 1, -1, 0, Node_11, Node_11 + 2,
+			C3_1, C4, C2_1, C1_1, C3_1, C4, Coef, Coef_location);
+			break;
+		case 1:// 1 lei
+			kind1_node(j, j - offset, -(Nx_side * 2 - N_d0 - N_a + 2 + Nx_1 / 2) - 1, -(Nx_side * 2 - N_d0 - N_a + 2 + Nx_1 / 2), -(Nx_side - N_d0 - N_a + 2 + Nx_1 / 2) - 1, -(Nx_side - N_d0 - N_a + 2 + Nx_1 / 2),
+				-1, 0, 1, Node_11,
+				A2_1, A2_1, A1_1, A1_1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			break;
+		case 2:// 5 node 2dx
+			inner_5node(j, j - offset, 2, -(Nx_side - N_d0 - N_a + 1 + Nx_1 / 2 + 2), Node_11, Coef, Coef_location);
+			break;
+		case 3:// 1 lei que 2 dian
+			kind2_node(j, j - offset, -(Nx_side - N_d0 - N_a + 1 + Nx_1 / 2 + 3) - Nx_side, -(Nx_side - N_d0 - N_a + 1 + Nx_1 / 2 + 3), -1, 0, 1,
+				Node_11, A2_1, A1_1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 4) :// 1 lei que 2 dian
+			kind2_node(j, j - offset, -(Nx_side - N_d0 - N_a + Nx_1 - 4) - Nx_side, -(Nx_side - N_d0 - N_a + Nx_1 - 4), -1, 0, 1, Node_11,
+			A2_1, A1_1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 3) :// 5 node 2dx
+			inner_5node(j, j - offset, 2, -(Nx_side - N_d0 - N_a + Nx_1 - 3), Node_11, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 2) :// 1 lei
+			kind1_node(j, j - offset, -(Nx_side * 2 - N_d0 - N_a + Nx_1 - 2), -(Nx_side * 2 - N_d0 - N_a + Nx_1 - 2) + 1, -(Nx_side - N_d0 - N_a + Nx_1 - 2), -(Nx_side - N_d0 - N_a + Nx_1 - 2) + 1,
+			-1, 0, 1, Node_11, A2_1, A2_1, A1_1, A1_1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_side*N_d1 - Nx_side - Nx_1 / 2) % 2 == 0)
+			{
+				inner_4node(j, j - offset, -1, 0, 1, Node_11, 1, k*k * 4 * dx*dx - 4, 1, 1, Coef, Coef_location);
+			}
+			else//1 lei
+			{
+				inner_4node(j, j - offset, -1, 0, 1, Node_11, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//***************************************************************************************
+	for (i = (Nx_side*N_d1 + Nx_side + Nx_1); i<(Nx_side*N_d1 + Nx_side + Nx_1 + Nx_2); i++)//right 2 Nx_2 :  74 node! 
+	{
+		switch (i - Nx_side*N_d1 - Nx_1 - Nx_side)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Nx_side - Nx_1, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (Nx_2 - 1) :
+			boundary_node(j, j - offset, 2, -Nx_1 - Nx_2, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang
+			kind2_node(j, j - offset, -Nx_side - Nx_1, -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (N_d0 - 2) ://3 lei shang
+			kind3_node(j, j - offset, -Nx_side - Nx_1 - 1, -Nx_side - Nx_1, -1, 0, 1, Nx_2 - N_d0 + 2,
+			C4, C4, C3_1, C1_1, C3_1, C2_1, Coef, Coef_location);
+			break;
+		case Node_1://3 lei xia
+			kind3_node(j, j - offset, -(Nx_side - N_d0 - 1 + Nx_1 + Node_1), -(Nx_side - N_d0 - 1 + Nx_1 + Node_1) + 1, -1, 0, 1, Nx_2 - N_d0 + 2,
+				C4, C4, C3_1, C1_1, C3_1, C2_1, Coef, Coef_location);
+			break;
+		case (Node_1 + 1) ://2 lei xia
+			kind2_node(j, j - offset, -(Nx_side - N_d0 - 1 + Nx_1 + Node_1), -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 4) ://2 lei shang
+			kind2_node(j, j - offset, -(Nx_side - N_d0 - 1 + Nx_1 + Node_1), -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 3) ://3 lei shang
+			kind3_node(j, j - offset, -(Nx_side - N_d0 - 1 + Nx_1 + Node_1) - 1, -(Nx_side - N_d0 - 1 + Nx_1 + Node_1), -1, 0, 1, Nx_2 - Node_11 + Nx_3 - 1,
+			C4, C4, C3_1, C1_1, C3_1, C2_1, Coef, Coef_location);
+			break;
+		case Node_11://3 lei xia
+			kind3_node(j, j - offset, -Nx_1 - Nx_2, -Nx_1 - Nx_2 + 1, -1, 0, 1, Nx_2 - Node_11 + Nx_3 - 1,
+				C4, C4, C3_1, C1_1, C3_1, C2_1, Coef, Coef_location);
+			break;
+		case (Node_11 + 1) ://2 lei xia
+			kind2_node(j, j - offset, -Nx_1 - Nx_2, -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_side*N_d1 - Nx_1 - Nx_side) < (N_d0 - 3))// 4dx
+			{
+				inner_5node(j, j - offset, 4, -Nx_side - Nx_1, Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - Nx_side*N_d1 - Nx_1 - Nx_side) >= (N_d0 - 1)) && ((i - Nx_side*N_d1 - Nx_1 - Nx_side) < Node_1))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Nx_1 + N_d0 - 1), Nx_2 - N_d0 + 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_side*N_d1 - Nx_1 - Nx_side) > (Node_1 + 1)) && ((i - Nx_side*N_d1 - Nx_1 - Nx_side) < (Node_1 + N_a - 4)))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -(Nx_side - N_d0 - 1 + Nx_1 + Node_1), Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - Nx_side*N_d1 - Nx_1 - Nx_side) >= (Node_1 + N_a - 2)) && ((i - Nx_side*N_d1 - Nx_1 - Nx_side) < Node_11))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -Node_11, Nx_2 - Node_11 + Nx_3 - 1, Coef, Coef_location);
+			}
+			else// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Nx_1 - Nx_2, Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//====================================================================================================
+	//调用封装函数
+	//left 1 --- right 1
+	scan_coef_Matrix_middle_wrapper(j, Coef, Coef_location, num_total, sizeN - 2 * Num1, offset);
+	//=======================================================================================================================
+	//***************************************************************************************
+	//cout << "circle num1:" << j << endl;
+	for (i = (Nx_2 + Nx_3); i<(Nx_2 + Nx_3 + Node_1 + 2); i++)// circle num1 Nx_2:  74 node!  part1 !
+	{
+		switch (i - Nx_2 - Nx_3)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Nx_2 - Nx_3, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 + Num2 + Num3 + Num4,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3) < Node11))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - N_d0 + 2 + Num2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node11) && ((i - Nx_2 - Nx_3) <= Node12))// 2 lei left 2j !
+			{
+				kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Nx_3 + N_d0 - 2), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + ((i - Nx_2 - Nx_3) - Node11) * 2,
+					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - Node_1 + Num2 + Num3 / 2 - 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Node_1 + 2); i<(Nx_2 + Nx_3 + Num1); i++)// circle num1 Nx_2:  74 node!  part2 !
+	{
+		switch (i - Nx_2 - Nx_3)
+		{
+		case (Num1 - 1) :
+			boundary_node(j, j - offset, 2, -Nx_2 - Nx_3, Num5 + Num2 + Num3 + Num4, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_11 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num5 + Num2 + Num3 + Num4,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3) < (Node_1 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) > (Node_1 + N_a - 4)) && ((i - Nx_2 - Nx_3) < Node13))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node13) && ((i - Nx_2 - Nx_3) <= Node14))// 2 lei left 2j !
+			{
+				kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Node_11 + 1), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + Num2 / 2 + ((i - Nx_2 - Nx_3) - Node13) * 2,
+					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node14) && ((i - Nx_2 - Nx_3) <= Node_11))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_11 + Num2 + Num3 - 1, Coef, Coef_location);
+			}
+			else
+			{
+				inner_5node(j, j - offset, 4, -(Nx_3 + Nx_2), Num5 + Num2 + Num3 + Num4, Coef, Coef_location);// 4dx!
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!!!!!!!!!
+	//cout << "circle num 2:" << j << endl;
+	for (i = (Nx_2 + Nx_3 + Num1); i<(Nx_2 + Nx_3 + Num1 + Num2 / 2); i++)// num 2 :  26 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num1 - Node11) - 1, -(Num1 - Node11), 0, 1, Num2 + 5 - 2, Num2 + 5,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2 / 2 - 1) ://node2: 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num1 - Node12 + Num2 / 2 - 1), -(Num1 - Node12 + Num2 / 2 - 1) + 1, -1, 0, Num2 + 5, Num2 + 5 + 2,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1) % 2 == 0)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2), Num2 + 5, Coef, Coef_location);
+			}
+			else//1 lei  2j left
+			{
+				kind1_node(j, j - offset, -((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2) - (Nx_3 + N_d0 - 2),
+					-((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2) - (Nx_3 + N_d0 - 2) + 1,
+					-((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2),
+					-((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2) + 1,
+					-1, 0, 1, 5 + Num2, A2_2, A2_2, A1_2, A1_2, A3_2, A5_2, A3_2, A4_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 / 2); i<(Nx_2 + Nx_3 + Num1 + Num2); i++)// num 2 :  26 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 / 2)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num1 - Node13 + Num2 / 2) - 1, -(Num1 - Node13 + Num2 / 2), 0, 1, Num3 - 5 - 2, Num3 - 5,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2 / 2 - 1) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num1 - Node14 + Num2 - 1), -(Num1 - Node14 + Num2 - 1) + 1, -1, 0, Num3 - 5, Num3 - 5 + 2,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) % 2 == 0)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2,
+					Num3 - 5, Coef, Coef_location);
+			}
+			else//1 lei 2j left
+			{
+				kind1_node(j, j - offset, -((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2 - (Node_11 + 1),
+					-((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2 - (Node_11 + 1) + 1,
+					-((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2,
+					-((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2 + 1,
+					-1, 0, 1, Num3 - 5, A2_2, A2_2, A1_2, A1_2, A3_2, A5_2, A3_2, A4_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!!!
+	//cout << "circle num 3:" << j << endl;
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 / 2); i++)// num 3 :  46 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, j - offset, -(Num1 - N_d0 + 2 + Num2) - 2, -(Num1 - N_d0 + 2 + Num2) - 1, -(Num1 - N_d0 + 2 + Num2), 0, 1, Num3 + Num4 + N_d0 - 2 - 2,
+				Num3 + Num4 + N_d0 - 2 - 1, Num3 + Num4 + N_d0 - 2, A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num1 - N_d0 + 2 + Num2), -2, -1, 0, 1, Num3 + Num4 + N_d0 - 2,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num1 - N_d0 + 2 + Num2) - 1, -(Num1 - N_d0 + 2 + Num2), -1, 0, 1, Num3 - 4,
+				C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), -(Num1 - Node_1 + Num2 + Num3 / 2 - 1) + 1, -1, 0, 1, Num3 - 4,
+			C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), -1, 0, 1, 2, Num3 / 2 + 1 + Num4 + Node_5,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), -(Num1 - Node_1 + Num2 + Num3 / 2 - 1) + 1, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1) + 2, -1, 0,
+			Num3 / 2 + 1 + Num4 + Node_5, Num3 / 2 + 1 + Num4 + Node_5 + 1, Num3 / 2 + 1 + Num4 + Node_5 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2) < 3)// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num1 - N_d0 + 2 + Num2), Num3 + Num4 + N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2) < (Num3 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num2 + 5), Num3 - 4, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), Num3 / 2 + 1 + Num4 + Node_5, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 / 2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3); i++)// num 3 :  46 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, j - offset, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2) - 2, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2) - 1, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), 0, 1,
+				Num3 / 2 + Num4 + Node_5 + N_a - 3 - 2, Num3 / 2 + Num4 + Node_5 + N_a - 3 - 1, Num3 / 2 + Num4 + Node_5 + N_a - 3,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), -2, -1, 0, 1, Num3 / 2 + Num4 + Node_5 + N_a - 3,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2) - 1, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), -1, 0, 1, 5 + Num4 - 1,
+				C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num1 - Node_11 + Num2 + Num3 - 1), -(Num1 - Node_11 + Num2 + Num3 - 1) + 1, -1, 0, 1, 5 + Num4 - 1,
+			C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, j - offset, -(Num1 - Node_11 + Num2 + Num3 - 1), -1, 0, 1, 2, 1 + Num4 + Node_55,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, j - offset, -(Num1 - Node_11 + Num2 + Num3 - 1), -(Num1 - Node_11 + Num2 + Num3 - 1) + 1, -(Num1 - Node_11 + Num2 + Num3 - 1) + 2, -1, 0,
+			1 + Num4 + Node_55, 1 + Num4 + Node_55 + 1, 1 + Num4 + Node_55 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2) < 3)// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), Num3 / 2 + Num4 + Node_5 + N_a - 3, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2) < (Num3 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 5), 5 + Num4 - 1, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num1 - Node_11 + Num2 + Num3 - 1), 1 + Num4 + Node_55, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	//cout << "circle num 4:" << j << endl;
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 / 2); i++)// num 4 :  30 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3)
+		{
+		case 0:// 1 lei 2j shang
+			kind1_node(j, j - offset, -(Num3 - 4) - 2, -(Num3 - 4) - 1, -(Num3 - 4), 0, 1, Num4 + N_d0 + 2 - 2, Num4 + N_d0 + 2 - 1, Num4 + N_d0 + 2,
+				A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4 / 2 - 1) :// 1 lei 2j xia
+			kind1_node(j, j - offset, -(Num3 - 4), -(Num3 - 4) + 1, -(Num3 - 4) + 2, -1, 0,
+			Num4 + N_d0 + 2 - N_c1, Num4 + N_d0 + 2 - N_c1 + 1, Num4 + N_d0 + 2 - N_c1 + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) <= Node41)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 4), Num4 + N_d0 + 2, Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) >= Node42) // 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 4), Num4 + N_d0 + 2 - N_c1, Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, j - offset, -(Num3 - 4), -1, 0, 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 / 2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4); i++)// num 4 :  30 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3)
+		{
+		case (Num4 / 2) :// 1 lei 2j shang
+			kind1_node(j, j - offset, -(5 + Num4 - 1) - 2, -(5 + Num4 - 1) - 1, -(5 + Num4 - 1), 0, 1,
+			(Node_55 - 4 + 1 + N_c1) - 2, (Node_55 - 4 + 1 + N_c1) - 1, (Node_55 - 4 + 1 + N_c1),
+			A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4 - 1) :// 1 lei 2j xia
+			kind1_node(j, j - offset, -(5 + Num4 - 1), -(5 + Num4 - 1) + 1, -(5 + Num4 - 1) + 2, -1, 0,
+			(Node_55 - 4 + 1), (Node_55 - 4 + 1) + 1, (Node_55 - 4 + 1) + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) <= Node43)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(5 + Num4 - 1), (Node_55 - 4 + 1 + N_c1), Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) >= Node44) // 1dx
+			{
+				inner_5node(j, j - offset, 1, -(5 + Num4 - 1), (Node_55 - 4 + 1), Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, j - offset, -(5 + Num4 - 1), -1, 0, 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	//cout << "circle num5:" << j << endl;
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Node_5 + 2); i++)// circle num5 :  80 node!  part1 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Num1 - Num2 - Num3 - Num4, Num5 + Num6 + Num7 + Num8, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Num1 - Num2 - Num3 - Num4, -2, -1, 0, 1, Num5 + Num6 + Num7 + Num8,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (N_d0 + 1) :// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num3 + Num4 + N_d0 - 2), -2, -1, 0, 1, Num5 - N_d0 + 2 + Num6,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node51:// inner 3 node
+			inner_3node(j, j - offset, -(Num4 + N_d0 + 2), -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
+			break;
+		case (Node51 + 1) :// inner 3 node
+			inner_3node(j, j - offset, -(Num4 + N_d0 + 2) + N_c1, 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node_5 - 3) ://2 lei xia 2j
+			kind2_node(j, j - offset, -(Num3 / 2 + 1 + Num4 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num6 + Num7 / 2 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_5 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num1 - Num2 - Num3 - Num4, Num5 + Num6 + Num7 + Num8, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (N_d0 + 1)))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 + Num4 + N_d0 - 2), Num5 - N_d0 + 2 + Num6, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (N_d0 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < Node51))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num4 + N_d0 + 2), Num5 - N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node51 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_5 - 3)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num4 + N_d0 + 2) + N_c1, Num5 - N_d0 - 2 - 2, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + 1 + Num4 + Node_5), Num5 - Node_5 + Num6 + Num7 / 2 - 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Node_5 + 2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5); i++)// circle num5 :  80 node!  part2 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4)
+		{
+		case (Num5 - 1) :
+			boundary_node(j, j - offset, 2, -Num2 - Num3 - Num4 - Num5, Num6 + Num7 + Num8 + Num9, Coef, Coef_location);
+			break;
+		case (Node_5 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5), -2, -1, 0, 1, Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_5 + N_a) :// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num3 / 2 + Num4 + Node_5 + N_a - 3), -2, -1, 0, 1, Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node52:// inner 3 node
+			inner_3node(j, j - offset, -(Node_55 - 4 + 1) - N_c1, -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
+			break;
+		case (Node52 + 1) :// inner 3 node
+			inner_3node(j, j - offset, -(Node_55 - 4 + 1), 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node_55 - 3) ://2 lei xia 2j
+			kind2_node(j, j - offset, -(Num4 + Node_55 + 1), -1, 0, 1, 2, Num5 - Node_55 + Num6 + Num7 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_55 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -Num2 - Num3 - Num4 - Num5, -1, 0, 1, 2, Num6 + Num7 + Num8 + Num9,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_5 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -(Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5), Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node_5 + N_a - 4)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_5 + N_a)))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + Num4 + Node_5 + N_a - 3), Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node_5 + N_a)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < Node52))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Node_55 - 4 + 1) - N_c1, (Num5 - Node_55 + 4 + Num6 - 1) + 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node52 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_55 - 3)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Node_55 - 4 + 1), (Num5 - Node_55 + 4 + Num6 - 1), Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node_55 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_55 + 1)))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num4 + Node_55 + 1), Num5 - Node_55 + Num6 + Num7 - 1, Coef, Coef_location);
+			}
+			else// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num2 - Num3 - Num4 - Num5, Num6 + Num7 + Num8 + Num9, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//**************************************************************
+	cout << "middle_1区域节点数:" << j << endl;
+	if (j == sizeM)
+		cout << "middle_1 passed..." << endl;
+	else
+		cout << "middle_1 failed..." << endl;
+	//修正矩阵，将不在本区域的节点刨除
+	for (int i = 0; i != sizeM; i++)
+		for (int j = 0; j != N_matrix; j++){
+		if (Coef_location[i][j] < 0 || Coef_location[i][j] >= sizeN)
+			Coef_location[i][j] = -1;
+		}
+	if (Debug)
+	{
+		ofstream outFile_Coef("middle_1.txt");
+		if (!outFile_Coef)
+		{
+			cout << "Can't write the coefficient matrix into file !" << endl;
+			exit(1);//Terminate with fault
+		}
+		else
+		{
+			int i, j;
+			for (i = 0; i < sizeM; i++)
+			{
+				for (j = 0; j < N_matrix; j++)
+				{
+					if ((Coef[i][j].real != 0 || Coef[i][j].image != 0) && Coef_location[i][j] >= 0)
+						outFile_Coef << Coef[i][j].real << "+j*" << Coef[i][j].image << " (" << i << "," << Coef_location[i][j] << ") ";
+				}
+				outFile_Coef << endl << endl;
+			}
+		}
+		outFile_Coef.close();
+	}
+
+};
+void scan_coef_Matrix_middle_11(complex** Coef, int num_total, int ** Coef_location, int sizeM, int sizeN, int offset)
+{
+	int i = 0, j = 0, m = 0;
+	for (j = 0; j<num_total; j++)         //系数矩阵初始置零
+	{
+		for (i = 0; i<N_matrix; i++)
+		{
+			Coef[j][i].real = 0;
+			Coef[j][i].image = 0;
+			Coef_location[j][i] = -1;//初始化为负值
+		}
+	}
+	j = 0;
+	//系数矩阵扫描
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + 2); i++)// circle num13(5) :  80 node!  part1 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Num9 - Num8 - Num7 - Num6, Num5 + Num4 + Num3 + Num2, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Num9 - Num8 - Num7 - Num6, -2, -1, 0, 1, Num5 + Num4 + Num3 + Num2,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (N_d0 + 1) :// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num7 + Num6 + N_d0 - 2), -2, -1, 0, 1, Num5 - N_d0 + 2 + Num4,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node51:// inner 3 node
+			inner_3node(j, j - offset, -1, 0, (Num5 - N_d0 - 2), 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node51 + 1) :// inner 3 node
+			inner_3node(j, j - offset, 0, 1, (Num5 - N_d0 - 2) + N_c1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Node_5 - 3) ://2 lei xia 2j
+			kind2_node(j, j - offset, -(Num7 / 2 + 1 + Num6 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num4 + Num3 / 2 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_5 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num9 - Num8 - Num7 - Num6, Num5 + Num4 + Num3 + Num2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (N_d0 + 1)))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num7 + Num6 + N_d0 - 2), Num5 - N_d0 + 2 + Num4, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (N_d0 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < Node51))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num6 + N_d0 + 2), (Num5 - N_d0 - 2), Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node51 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_5 - 3)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num6 + N_d0 + 2) - 2, (Num5 - N_d0 - 2) + N_c1, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num7 / 2 + 1 + Num6 + Node_5), Num5 - Node_5 + Num4 + Num3 / 2 - 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + 2);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// circle num13(5) :  80 node!  part2 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case (Num5 - 1) :
+			boundary_node(j, j - offset, 2, -Num8 - Num7 - Num6 - Num5, Num4 + Num3 + Num2 + Num1, Coef, Coef_location);
+			break;
+		case (Node_5 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -(Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5), -2, -1, 0, 1, Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_5 + N_a) :// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num7 / 2 + Num6 + Node_5 + N_a - 3), -2, -1, 0, 1, Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node52:// inner 3 node
+			inner_3node(j, j - offset, -1, 0, (Num5 - Node_55 + 4 + Num4 - 1) - N_c1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node52 + 1) :// inner 3 node
+			inner_3node(j, j - offset, 0, 1, (Num5 - Node_55 + 4 + Num4 - 1), k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Node_55 - 3) ://2 lei xia 2j
+			kind2_node(j, j - offset, -(Num6 + Node_55 + 1), -1, 0, 1, 2, Num5 - Node_55 + Num4 + Num3 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_55 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -Num8 - Num7 - Num6 - Num5, -1, 0, 1, 2, Num4 + Num3 + Num2 + Num1,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_5 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -(Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5), Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node_5 + N_a - 4)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_5 + N_a)))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num7 / 2 + Num6 + Node_5 + N_a - 3), Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node_5 + N_a)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < Node52))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Node_55 - 4 + 1) + 2, (Num5 - Node_55 + 4 + Num4 - 1) - N_c1, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node52 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_55 - 3)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Node_55 - 4 + 1), (Num5 - Node_55 + 4 + Num4 - 1), Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node_55 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_55 + 1)))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num6 + Node_55 + 1), Num5 - Node_55 + Num4 + Num3 - 1, Coef, Coef_location);
+			}
+			else// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num8 - Num7 - Num6 - Num5, Num4 + Num3 + Num2 + Num1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num4 / 2); i++)// num 14(4) :  30 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case 0:// 1 lei 2j shang
+			kind1_node(j, j - offset, -(Num5 - N_d0 - 2) - 2, -(Num5 - N_d0 - 2) - 1, -(Num5 - N_d0 - 2), 0, 1, Num4 + 4 - 2, Num4 + 4 - 1, Num4 + 4,
+				A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4 / 2 - 1) :// 1 lei 2j xia
+			kind1_node(j, j - offset, -(Num5 - N_d0 - 2) - N_c1, -(Num5 - N_d0 - 2) - N_c1 + 1, -(Num5 - N_d0 - 2) - N_c1 + 2, -1, 0,
+			Num4 + 4, Num4 + 4 + 1, Num4 + 4 + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) <= Node41)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num5 - N_d0 - 2), Num4 + 4, Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) >= Node42) // 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num5 - N_d0 - 2) - N_c1, Num4 + 4, Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, j - offset, -1, 0, 1, Num4 + 4, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num4 / 2);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num14(4) :  30 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case (Num4 / 2) :// 1 lei 2j shang
+			kind1_node(j, j - offset, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1 - 2, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1 - 1, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1, 0, 1,
+			(Num3 - 5 + 1) - 2, (Num3 - 5 + 1) - 1, (Num3 - 5 + 1),
+			A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4 - 1) :// 1 lei 2j xia
+			kind1_node(j, j - offset, -(Num5 - Node_55 + 4 + Num4 - 1), -(Num5 - Node_55 + 4 + Num4 - 1) + 1, -(Num5 - Node_55 + 4 + Num4 - 1) + 2, -1, 0,
+			(Num3 - 5 + 1), (Num3 - 5 + 1) + 1, (Num3 - 5 + 1) + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) <= Node43)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1, (Num3 - 5 + 1), Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) >= Node44) // 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num5 - Node_55 + 4 + Num4 - 1), (Num3 - 5 + 1), Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, j - offset, -1, 0, 1, (Num3 - 5 + 1), 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num3 / 2); i++)// num 15(3) :  46 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, j - offset, -(Num5 - N_d0 + 2 + Num4) - 2, -(Num5 - N_d0 + 2 + Num4) - 1, -(Num5 - N_d0 + 2 + Num4), 0, 1,
+				Num3 + Num2 + N_d0 - 2 - 2, Num3 + Num2 + N_d0 - 2 - 1, Num3 + Num2 + N_d0 - 2,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num5 - N_d0 + 2 + Num4), -2, -1, 0, 1, Num3 + Num2 + N_d0 - 2,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num4 + 4), -1, 0, 1, (Num3 + Num2 + N_d0 - 2) - 1, (Num3 + Num2 + N_d0 - 2),
+				C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num4 + 4), -1, 0, 1, Num3 / 2 + 1 + Num2 + Node_1, Num3 / 2 + 1 + Num2 + Node_1 + 1,
+			C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1), -1, 0, 1, 2, Num3 / 2 + 1 + Num2 + Node_1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1), -(Num5 - Node_5 + Num4 + Num3 / 2 - 1) + 1, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1) + 2, -1, 0,
+			Num3 / 2 + 1 + Num2 + Node_1, Num3 / 2 + 1 + Num2 + Node_1 + 1, Num3 / 2 + 1 + Num2 + Node_1 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < 3)// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num5 - N_d0 + 2 + Num4), Num3 + Num2 + N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Num3 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num4 + 4), Num3 - 5, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1), Num3 / 2 + 1 + Num2 + Node_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num3 / 2);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num 15(3) :  46 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, j - offset, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2) - 2, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2) - 1, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2), 0, 1,
+				Num3 / 2 + Num2 + Node_1 + N_a - 3 - 2, Num3 / 2 + Num2 + Node_1 + N_a - 3 - 1, Num3 / 2 + Num2 + Node_1 + N_a - 3,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2), -2, -1, 0, 1, Num3 / 2 + Num2 + Node_1 + N_a - 3,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num3 - 5 + 1), -1, 0, 1, (Num3 / 2 + Num2 + Node_1 + N_a - 3) - 1, (Num3 / 2 + Num2 + Node_1 + N_a - 3),
+				C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num3 - 5 + 1), -1, 0, 1, 1 + Num2 + Node_11, 1 + Num2 + Node_11 + 1,
+			C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, j - offset, -(Num5 - Node_55 + Num4 + Num3 - 1), -1, 0, 1, 2, 1 + Num2 + Node_11,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, j - offset, -(Num5 - Node_55 + Num4 + Num3 - 1), -(Num5 - Node_55 + Num4 + Num3 - 1) + 1, -(Num5 - Node_55 + Num4 + Num3 - 1) + 2, -1, 0,
+			1 + Num2 + Node_11, 1 + Num2 + Node_11 + 1, 1 + Num2 + Node_11 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2) < 3)// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2), Num3 / 2 + Num2 + Node_1 + N_a - 3, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2) < (Num3 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 5 + 1), 6 + Num2 - 1, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num5 - Node_55 + Num4 + Num3 - 1), 1 + Num2 + Node_11, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num2 / 2); i++)// num 16(2) :  26 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num3 - 3), -(Num3 - 3) + 2, 0, 1, Num2 + Node11 - 1, Num2 + Node11,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2 / 2 - 1) ://node2: 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num3 - 5), -(Num3 - 5) + 2, -1, 0, Num2 / 2 + Node_1 - 4 + 1, Num2 / 2 + Node_1 - 4 + 1 + 1,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) % 2 == 0)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 5),
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2), Coef, Coef_location);
+			}
+			else//1 lei  2j left
+			{
+				kind1_node(j, j - offset, -(Num3 - 5), -1, 0, 1,
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2),
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2) + 1,
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2) + (Num1 - N_d0 + 2),
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2) + 1 + (Num1 - N_d0 + 2),
+					A4_2, A3_2, A5_2, A3_2, A1_2, A1_2, A2_2, A2_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num2 / 2);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 * 2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num 16(2) :  26 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(6 + Num2 - 1) - 2, -(6 + Num2 - 1), 0, 1, Num2 / 2 + Node13 - 1, Num2 / 2 + Node13,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2 / 2 - 1) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(6 + Num2 - 1), -(6 + Num2 - 1) + 2, -1, 0, Node_11 - 4 + 1, Node_11 - 4 + 1 + 1,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) % 2 == 0)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(6 + Num2 - 1), Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2,
+					Coef, Coef_location);
+			}
+			else//1 lei 2j left
+			{
+				kind1_node(j, j - offset, -(6 + Num2 - 1), -1, 0, 1,
+					(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2),
+					(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2) + 1,
+					(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2) + (Num1 - Node_11 + Nx_3 - 1),
+					(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2) + 1 + (Num1 - Node_11 + Nx_3 - 1),
+					A4_2, A3_2, A5_2, A3_2, A1_2, A1_2, A2_2, A2_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (num_total - Nx_2 - Nx_3 - Num1); i<(num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i++)// circle num17(1) Nx_2:  74 node!  part1 !
+	{
+		switch (i - num_total + Nx_2 + Nx_3 + Num1)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Num5 - Num4 - Num3 - Num2, -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - num_total + Nx_2 + Nx_3 + Num1) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (N_d0 - 3)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node11))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 + Num2 + N_d0 - 2), Num1 - N_d0 + 2, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node11) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node12))// 2 lei right 2j !
+			{
+				kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node11) * 2),
+					-1, 0, 1, Num1 - N_d0 + 2, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + 1 + Num2 + Node_1), Num1 - N_d0 + 2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i<(num_total - Nx_2 - Nx_3); i++)// circle num17(1) Nx_2:  74 node!  part2 !
+	{
+		switch (i - num_total + Nx_2 + Nx_3 + Num1)
+		{
+		case (Num1 - 1) :
+			boundary_node(j, j - offset, 2, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_11 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -Num1 - Num2 - Num3 - Num4, -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - num_total + Nx_2 + Nx_3 + Num1) < (Node_1 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (Node_1 + N_a - 4)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node13))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + Num2 + Node_1 + N_a - 3), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node13) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node14))// 2 lei left 2j !
+			{
+				kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 / 2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node13) * 2),
+					-1, 0, 1, Num1 - Node_11 + Nx_3 - 1, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node14) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node_11))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num2 + Node_11 + 1), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
+			}
+			else
+			{
+				inner_5node(j, j - offset, 4, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);// 4dx!
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//cout << "offset:" << j << endl;
+	//====================================================================================================
+	//调用封装函数
+	//left 1 --- right 1
+	scan_coef_Matrix_middle_wrapper(j, Coef, Coef_location, num_total, sizeN - 2 * Num1, offset);
+	//=======================================================================================================================
+	//***************************************************************************************
+	for (i = (Nx_2 + Nx_3); i<(Nx_2 * 2 + Nx_3); i++)//left 2 Nx_2:  74 node! 
+	{
+		switch (i - Nx_2 - Nx_3)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Nx_2 - Nx_3, Nx_2 + Nx_1, Coef, Coef_location);
+			break;
+		case (Nx_2 - 1) :
+			boundary_node(j, j - offset, 2, -Nx_3 - Nx_2, Nx_1 + Nx_side, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang
+			kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Nx_2 + Nx_1,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (N_d0 - 2) ://3 lei shang
+			kind3_node(j, j - offset, -(Nx_3 + N_d0 - 2), -1, 0, 1, Nx_2 + Nx_1 - 1, Nx_2 + Nx_1,
+			C2_1, C3_1, C1_1, C3_1, C4, C4, Coef, Coef_location);
+			break;
+		case Node_1://3 lei xia
+			kind3_node(j, j - offset, -(Nx_3 + N_d0 - 2), -1, 0, 1, Nx_2 - Node_1 + Nx_1 + N_d0 + 1, Nx_2 - Node_1 + Nx_1 + N_d0 + 1 + 1,
+				C2_1, C3_1, C1_1, C3_1, C4, C4, Coef, Coef_location);
+			break;
+		case (Node_1 + 1) ://2 lei xia
+			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Nx_2 - Node_1 + Nx_1 + N_d0 + 1,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 4) ://2 lei shang
+			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -2, -1, 0, 1, Nx_2 - Node_1 + Nx_1 + N_d0 + 1,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 3) ://3 lei shang
+			kind3_node(j, j - offset, -(Node_11 + 1), -1, 0, 1, Nx_2 - Node_1 + Nx_1 + N_d0 + 1 - 1, Nx_2 - Node_1 + Nx_1 + N_d0 + 1,
+			C2_1, C3_1, C1_1, C3_1, C4, C4, Coef, Coef_location);
+			break;
+		case Node_11://3 lei xia
+			kind3_node(j, j - offset, -(Node_11 + 1), -1, 0, 1, Nx_side + Nx_1, Nx_side + Nx_1 + 1,
+				C2_1, C3_1, C1_1, C3_1, C4, C4, Coef, Coef_location);
+			break;
+		case (Node_11 + 1) ://2 lei xia
+			kind2_node(j, j - offset, -Nx_3 - Nx_2, -1, 0, 1, 2, Nx_1 + Nx_side,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3) < (N_d0 - 3))// 2dx!
+			{
+				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Nx_2 + Nx_1, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= (N_d0 - 1)) && ((i - Nx_2 - Nx_3) < Node_1))
+			{
+				inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Nx_2 - N_d0 + 1, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) > (Node_1 + 1)) && ((i - Nx_2 - Nx_3) < (Node_1 + N_a - 4)))// 2dx!
+			{
+				inner_5node(j, j - offset, 4, -(Nx_2 + Nx_3), Nx_2 - Node_1 + Nx_1 + N_d0 + 1, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= (Node_1 + N_a - 2)) && ((i - Nx_2 - Nx_3) < Node_11))
+			{
+				inner_5node(j, j - offset, 2, -(Node_11 + 1), Nx_1 + Nx_2 - Node_11, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Nx_side + Nx_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 * 2 + Nx_3); i<(Nx_2 * 2 + Nx_3 + Nx_1 / 2); i++)// left 1 Nx_1: 26 node! part1
+	{
+		switch (i - Nx_2 * 2 - Nx_3)
+		{
+		case 0:// 3 lei
+			kind3_node(j, j - offset, -(Nx_2 - N_d0 + 1) - 2, -(Nx_2 - N_d0 + 1), 0, 1, Nx_1 + N_d0 - 3, Nx_1 + N_d0 - 2,
+				C4, C3_1, C1_1, C2_1, C4, C3_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 1) ://node2: 3 lei
+			kind3_node(j, j - offset, -(Nx_2 - N_d0 + 1), -(Nx_2 - N_d0 + 1) + 2, -1, 0, Nx_1 / 2 + 1 + N_d0 + 1, Nx_1 / 2 + 1 + N_d0 + 2,
+			C3_1, C4, C2_1, C1_1, C3_1, C4, Coef, Coef_location);
+			break;
+		case 1:// 1 lei
+			kind1_node(j, j - offset, -(Nx_2 - N_d0 + 1), -1, 0, 1, (Nx_1 - 1 + N_d0 - 2), (Nx_1 - 1 + N_d0 - 2) + 1, (Nx_1 - 1 + N_d0 - 2) + Nx_side, (Nx_1 - 1 + N_d0 - 2) + 1 + Nx_side,
+				A4_1, A3_1, A5_1, A3_1, A1_1, A1_1, A2_1, A2_1, Coef, Coef_location);
+			break;
+		case 2:// 5 node 2dx
+			inner_5node(j, j - offset, 2, -(Nx_2 - N_d0 + 1), Nx_1 - 2 + N_d0 - 1, Coef, Coef_location);
+			break;
+		case 3:// 1 lei que 2 dian
+			kind2_node(j, j - offset, -(Nx_2 - N_d0 + 1), -1, 0, 1, Nx_1 - 3 + N_d0 - 1, Nx_1 - 3 + N_d0 - 1 + Nx_side,
+				A4_1, A3_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 4) :// 1 lei que 2 dian
+			kind2_node(j, j - offset, -(Nx_2 - N_d0 + 1), -1, 0, 1, N_d0 + Nx_1 / 2 + 4, N_d0 + Nx_1 / 2 + 4 + Nx_side,
+			A4_1, A3_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 3) :// 5 node 2dx
+			inner_5node(j, j - offset, 2, -(Nx_2 - N_d0 + 1), Nx_1 / 2 + 3 + N_d0, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 2) :// 1 lei
+			kind1_node(j, j - offset, -(Nx_2 - N_d0 + 1), -1, 0, 1, (Nx_1 / 2 + 2 + N_d0), (Nx_1 / 2 + 2 + N_d0) + 1, (Nx_1 / 2 + 2 + N_d0) + Nx_side, (Nx_1 / 2 + 2 + N_d0) + 1 + Nx_side,
+			A4_1, A3_1, A5_1, A3_1, A1_1, A1_1, A2_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 * 2 - Nx_3) % 2 == 0)
+			{
+				inner_4node(j, j - offset, -(Nx_2 - N_d0 + 1), -1, 0, 1, 1, 1, k*k * 4 * dx*dx - 4, 1, Coef, Coef_location);
+			}
+			else//1 lei
+			{
+				inner_4node(j, j - offset, -(Nx_2 - N_d0 + 1), -1, 0, 1, A4_1, A3_1, A5_1, A3_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 * 2 + Nx_3 + Nx_1 / 2); i<(Nx_2 * 2 + Nx_3 + Nx_1); i++)//left 1 Nx_1: 26 node! part2
+	{
+		switch (i - Nx_2 * 2 - Nx_3 - Nx_1 / 2)
+		{
+		case 0:// 3 lei
+			kind3_node(j, j - offset, -(Nx_2 - Node_11 + Nx_1) - 2, -(Nx_2 - Node_11 + Nx_1), 0, 1, Nx_1 / 2 + N_d0 + N_a - 3, Nx_1 / 2 + N_d0 + N_a - 2,
+				C4, C3_1, C1_1, C2_1, C4, C3_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 1) ://node2: 3 lei
+			kind3_node(j, j - offset, -(Nx_2 - Node_11 + Nx_1), -(Nx_2 - Node_11 + Nx_1) + 2, -1, 0, N_d0 + N_a + 1 + 1, N_d0 + N_a + 2 + 1,
+			C3_1, C4, C2_1, C1_1, C3_1, C4, Coef, Coef_location);
+			break;
+		case 1:// 1 lei
+			kind1_node(j, j - offset, -(Nx_2 - Node_11 + Nx_1), -1, 0, 1, (Nx_1 / 2 - 1 + N_d0 + N_a - 2), (Nx_1 / 2 - 1 + N_d0 + N_a - 2) + 1,
+				(Nx_1 / 2 - 1 + N_d0 + N_a - 2) + Nx_side, (Nx_1 / 2 - 1 + N_d0 + N_a - 2) + 1 + Nx_side,
+				A4_1, A3_1, A5_1, A3_1, A1_1, A1_1, A2_1, A2_1, Coef, Coef_location);
+			break;
+		case 2:// 5 node 2dx
+			inner_5node(j, j - offset, 2, -(Nx_2 - Node_11 + Nx_1), Nx_1 / 2 - 2 + N_d0 + N_a - 1, Coef, Coef_location);
+			break;
+		case 3:// 1 lei que 2 dian
+			kind2_node(j, j - offset, -(Nx_2 - Node_11 + Nx_1), -1, 0, 1, Nx_1 / 2 - 3 + N_d0 + N_a - 1, Nx_1 / 2 - 3 + N_d0 + N_a - 1 + Nx_side,
+				A4_1, A3_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 4) :// 1 lei que 2 dian
+			kind2_node(j, j - offset, -(Nx_2 - Node_11 + Nx_1), -1, 0, 1, N_d0 + N_a + 4, N_d0 + N_a + 4 + Nx_side,
+			A4_1, A3_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 3) :// 5 node 2dx
+			inner_5node(j, j - offset, 2, -(Nx_2 - Node_11 + Nx_1), 3 + N_d0 + N_a, Coef, Coef_location);
+			break;
+		case (Nx_1 / 2 - 2) :// 1 lei
+			kind1_node(j, j - offset, -(Nx_2 - Node_11 + Nx_1), -1, 0, 1, (2 + N_d0 + N_a), (2 + N_d0 + N_a) + 1, (2 + N_d0 + N_a) + Nx_side, (2 + N_d0 + N_a) + 1 + Nx_side,
+			A4_1, A3_1, A5_1, A3_1, A1_1, A1_1, A2_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 * 2 - Nx_3 - Nx_1 / 2) % 2 == 0)// 2dx
+			{
+				inner_4node(j, j - offset, -(Nx_2 - Node_11 + Nx_1), -1, 0, 1, 1, 1, k*k * 4 * dx*dx - 4, 1, Coef, Coef_location);
+			}
+			else//1 lei
+			{
+				inner_4node(j, j - offset, -(Nx_2 - Node_11 + Nx_1), -1, 0, 1, A4_1, A3_1, A5_1, A3_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!!!!
+	for (i = (Nx_2 * 2 + Nx_3 + Nx_1); i < (Nx_2 * 2 + Nx_3 + Nx_1 + Nx_side); i++)//middle left ,one line
+	{
+		switch (i - Nx_2 * 2 - Nx_3 - Nx_1)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Nx_2 - Nx_1, Nx_side, Coef, Coef_location);
+			break;
+		case (Nx_side - 1) :
+			boundary_node(j, j - offset, 2, -Nx_1 - Nx_side, Nx_side, Coef, Coef_location);
+			break;
+		case (N_d0 - 2) :// 2 lei
+			kind2_node(j, j - offset, -(Nx_1 + N_d0 - 2), -1, 0, 1, Nx_side, Nx_side * 2, B2, B3, B1_1, B3, B4, B5, Coef, Coef_location);
+			break;
+		case (N_d0 - 1) :// 2 lei缺一点
+			other_5_node(j, j - offset, -(Nx_1 - 2 + N_d0 - 1), -1, 0, Nx_side, 2 * Nx_side, B2, B3, B1_1, B4, B5, Coef, Coef_location);
+			break;
+		case N_d0:// 2 lei缺一点
+			other_5_node(j, j - offset, -(Nx_1 / 2 + 3 + N_d0), 0, 1, Nx_side, 2 * Nx_side, B2, B1_1, B3, B4, B5, Coef, Coef_location);
+			break;
+		case (N_d0 + 1) :// 2 lei
+			kind2_node(j, j - offset, -(Nx_1 / 2 + 1 + N_d0 + 1), -1, 0, 1, Nx_side, Nx_side * 2, B2, B3, B1_1, B3, B4, B5, Coef, Coef_location);
+			break;
+		case (N_d0 + N_a - 2) :// 2 lei
+			kind2_node(j, j - offset, -(Nx_1 / 2 + N_a + N_d0 - 2), -1, 0, 1, Nx_side, Nx_side * 2, B2, B3, B1_1, B3, B4, B5, Coef, Coef_location);
+			break;
+		case (N_d0 + N_a - 1) :// 2 lei缺一点
+			other_5_node(j, j - offset, -(Nx_1 / 2 - 2 + N_d0 + N_a - 1), -1, 0, Nx_side, 2 * Nx_side, B2, B3, B1_1, B4, B5, Coef, Coef_location);
+			break;
+		case (N_d0 + N_a) :// 2 lei缺一点
+			other_5_node(j, j - offset, -(N_d0 + N_a + 3), 0, 1, Nx_side, 2 * Nx_side, B2, B1_1, B3, B4, B5, Coef, Coef_location);
+			break;
+		case (N_d0 + N_a + 1) :// 2 lei
+			kind2_node(j, j - offset, -(1 + N_a + N_d0 + 1), -1, 0, 1, Nx_side, Nx_side * 2, B2, B3, B1_1, B3, B4, B5, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 * 2 - Nx_3 - Nx_1) < (N_d0 - 2))//up
+			{
+				inner_5node(j, j - offset, 4, -Nx_2 - Nx_1, Nx_side, Coef, Coef_location);
+			}
+			else if ((i - Nx_2 * 2 - Nx_3 - Nx_1) > (N_d0 + N_a + 1))//down
+			{
+				inner_5node(j, j - offset, 4, -Nx_1 - Nx_side, Nx_side, Coef, Coef_location);
+			}
+			else//middle
+			{
+				inner_5node(j, j - offset, 4, -(Nx_2 - Node_1 + Nx_1 + N_d0 + 1), Nx_side, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//**************************************************************
+	cout << "middle_11区域节点数:" << j << endl;
+	if (j == sizeM)
+		cout << "middle_11 passed..." << endl;
+	else
+		cout << "middle_11 failed..." << endl;
+	//修正矩阵，将不在本区域的节点刨除
+	for (int i = 0; i != sizeM; i++)
+		for (int j = 0; j != N_matrix; j++){
+		if (Coef_location[i][j] < 0 || Coef_location[i][j] >= sizeN)
+			Coef_location[i][j] = -1;
+		}
+	if (Debug)
+	{
+		ofstream outFile_Coef("middle_11.txt");
+		if (!outFile_Coef)
+		{
+			cout << "Can't write the coefficient matrix into file !" << endl;
+			exit(1);//Terminate with fault
+		}
+		else
+		{
+			int i, j;
+			for (i = 0; i < sizeM; i++)
+			{
+				for (j = 0; j < N_matrix; j++)
+				{
+					if ((Coef[i][j].real != 0 || Coef[i][j].image != 0) && Coef_location[i][j] >= 0)
+						outFile_Coef << Coef[i][j].real << "+j*" << Coef[i][j].image << " (" << i << "," << Coef_location[i][j] << ") ";
+				}
+				outFile_Coef << endl << endl;
+			}
+		}
+		outFile_Coef.close();
+	}
+
+};
+void scan_coef_Matrix_middle_7(complex** Coef, int num_total, int ** Coef_location, int sizeM, int sizeN, int offset)
+{
+	int i = 0, j = 0, m = 0;
+	for (j = 0; j<num_total; j++)         //系数矩阵初始置零
+	{
+		for (i = 0; i<N_matrix; i++)
+		{
+			Coef[j][i].real = 0;
+			Coef[j][i].image = 0;
+			Coef_location[j][i] = -1;//初始化为负值
+		}
+	}
+	j = 0;
+	//系数矩阵扫描
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + 2); i++)// circle num13(5) :  80 node!  part1 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Num9 - Num8 - Num7 - Num6, Num5 + Num4 + Num3 + Num2, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Num9 - Num8 - Num7 - Num6, -2, -1, 0, 1, Num5 + Num4 + Num3 + Num2,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (N_d0 + 1) :// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num7 + Num6 + N_d0 - 2), -2, -1, 0, 1, Num5 - N_d0 + 2 + Num4,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node51:// inner 3 node
+			inner_3node(j, j - offset, -1, 0, (Num5 - N_d0 - 2), 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node51 + 1) :// inner 3 node
+			inner_3node(j, j - offset, 0, 1, (Num5 - N_d0 - 2) + N_c1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Node_5 - 3) ://2 lei xia 2j
+			kind2_node(j, j - offset, -(Num7 / 2 + 1 + Num6 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num4 + Num3 / 2 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_5 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num9 - Num8 - Num7 - Num6, Num5 + Num4 + Num3 + Num2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (N_d0 + 1)))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num7 + Num6 + N_d0 - 2), Num5 - N_d0 + 2 + Num4, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (N_d0 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < Node51))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num6 + N_d0 + 2), (Num5 - N_d0 - 2), Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node51 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_5 - 3)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num6 + N_d0 + 2) - 2, (Num5 - N_d0 - 2) + N_c1, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num7 / 2 + 1 + Num6 + Node_5), Num5 - Node_5 + Num4 + Num3 / 2 - 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + 2);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// circle num13(5) :  80 node!  part2 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case (Num5 - 1) :
+			boundary_node(j, j - offset, 2, -Num8 - Num7 - Num6 - Num5, Num4 + Num3 + Num2 + Num1, Coef, Coef_location);
+			break;
+		case (Node_5 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -(Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5), -2, -1, 0, 1, Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_5 + N_a) :// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num7 / 2 + Num6 + Node_5 + N_a - 3), -2, -1, 0, 1, Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node52:// inner 3 node
+			inner_3node(j, j - offset, -1, 0, (Num5 - Node_55 + 4 + Num4 - 1) - N_c1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node52 + 1) :// inner 3 node
+			inner_3node(j, j - offset, 0, 1, (Num5 - Node_55 + 4 + Num4 - 1), k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Node_55 - 3) ://2 lei xia 2j
+			kind2_node(j, j - offset, -(Num6 + Node_55 + 1), -1, 0, 1, 2, Num5 - Node_55 + Num4 + Num3 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_55 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -Num8 - Num7 - Num6 - Num5, -1, 0, 1, 2, Num4 + Num3 + Num2 + Num1,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_5 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -(Num9 - Node_9 + Num8 + Num7 + Num6 + Node_5), Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node_5 + N_a - 4)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_5 + N_a)))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num7 / 2 + Num6 + Node_5 + N_a - 3), Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node_5 + N_a)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < Node52))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Node_55 - 4 + 1) + 2, (Num5 - Node_55 + 4 + Num4 - 1) - N_c1, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node52 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_55 - 3)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Node_55 - 4 + 1), (Num5 - Node_55 + 4 + Num4 - 1), Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > (Node_55 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Node_55 + 1)))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num6 + Node_55 + 1), Num5 - Node_55 + Num4 + Num3 - 1, Coef, Coef_location);
+			}
+			else// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num8 - Num7 - Num6 - Num5, Num4 + Num3 + Num2 + Num1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num4 / 2); i++)// num 14(4) :  30 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case 0:// 1 lei 2j shang
+			kind1_node(j, j - offset, -(Num5 - N_d0 - 2) - 2, -(Num5 - N_d0 - 2) - 1, -(Num5 - N_d0 - 2), 0, 1, Num4 + 4 - 2, Num4 + 4 - 1, Num4 + 4,
+				A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4 / 2 - 1) :// 1 lei 2j xia
+			kind1_node(j, j - offset, -(Num5 - N_d0 - 2) - N_c1, -(Num5 - N_d0 - 2) - N_c1 + 1, -(Num5 - N_d0 - 2) - N_c1 + 2, -1, 0,
+			Num4 + 4, Num4 + 4 + 1, Num4 + 4 + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) <= Node41)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num5 - N_d0 - 2), Num4 + 4, Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) >= Node42) // 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num5 - N_d0 - 2) - N_c1, Num4 + 4, Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, j - offset, -1, 0, 1, Num4 + 4, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num4 / 2);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num14(4) :  30 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case (Num4 / 2) :// 1 lei 2j shang
+			kind1_node(j, j - offset, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1 - 2, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1 - 1, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1, 0, 1,
+			(Num3 - 5 + 1) - 2, (Num3 - 5 + 1) - 1, (Num3 - 5 + 1),
+			A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4 - 1) :// 1 lei 2j xia
+			kind1_node(j, j - offset, -(Num5 - Node_55 + 4 + Num4 - 1), -(Num5 - Node_55 + 4 + Num4 - 1) + 1, -(Num5 - Node_55 + 4 + Num4 - 1) + 2, -1, 0,
+			(Num3 - 5 + 1), (Num3 - 5 + 1) + 1, (Num3 - 5 + 1) + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) <= Node43)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num5 - Node_55 + 4 + Num4 - 1) + N_c1, (Num3 - 5 + 1), Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) >= Node44) // 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num5 - Node_55 + 4 + Num4 - 1), (Num3 - 5 + 1), Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, j - offset, -1, 0, 1, (Num3 - 5 + 1), 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num3 / 2); i++)// num 15(3) :  46 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, j - offset, -(Num5 - N_d0 + 2 + Num4) - 2, -(Num5 - N_d0 + 2 + Num4) - 1, -(Num5 - N_d0 + 2 + Num4), 0, 1,
+				Num3 + Num2 + N_d0 - 2 - 2, Num3 + Num2 + N_d0 - 2 - 1, Num3 + Num2 + N_d0 - 2,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num5 - N_d0 + 2 + Num4), -2, -1, 0, 1, Num3 + Num2 + N_d0 - 2,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num4 + 4), -1, 0, 1, (Num3 + Num2 + N_d0 - 2) - 1, (Num3 + Num2 + N_d0 - 2),
+				C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num4 + 4), -1, 0, 1, Num3 / 2 + 1 + Num2 + Node_1, Num3 / 2 + 1 + Num2 + Node_1 + 1,
+			C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1), -1, 0, 1, 2, Num3 / 2 + 1 + Num2 + Node_1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1), -(Num5 - Node_5 + Num4 + Num3 / 2 - 1) + 1, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1) + 2, -1, 0,
+			Num3 / 2 + 1 + Num2 + Node_1, Num3 / 2 + 1 + Num2 + Node_1 + 1, Num3 / 2 + 1 + Num2 + Node_1 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < 3)// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num5 - N_d0 + 2 + Num4), Num3 + Num2 + N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) < (Num3 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num4 + 4), Num3 - 5, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num5 - Node_5 + Num4 + Num3 / 2 - 1), Num3 / 2 + 1 + Num2 + Node_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num3 / 2);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num 15(3) :  46 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, j - offset, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2) - 2, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2) - 1, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2), 0, 1,
+				Num3 / 2 + Num2 + Node_1 + N_a - 3 - 2, Num3 / 2 + Num2 + Node_1 + N_a - 3 - 1, Num3 / 2 + Num2 + Node_1 + N_a - 3,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2), -2, -1, 0, 1, Num3 / 2 + Num2 + Node_1 + N_a - 3,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num3 - 5 + 1), -1, 0, 1, (Num3 / 2 + Num2 + Node_1 + N_a - 3) - 1, (Num3 / 2 + Num2 + Node_1 + N_a - 3),
+				C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num3 - 5 + 1), -1, 0, 1, 1 + Num2 + Node_11, 1 + Num2 + Node_11 + 1,
+			C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, j - offset, -(Num5 - Node_55 + Num4 + Num3 - 1), -1, 0, 1, 2, 1 + Num2 + Node_11,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, j - offset, -(Num5 - Node_55 + Num4 + Num3 - 1), -(Num5 - Node_55 + Num4 + Num3 - 1) + 1, -(Num5 - Node_55 + Num4 + Num3 - 1) + 2, -1, 0,
+			1 + Num2 + Node_11, 1 + Num2 + Node_11 + 1, 1 + Num2 + Node_11 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2) < 3)// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num5 - Node_5 - N_a + 3 + Num4 + Num3 / 2), Num3 / 2 + Num2 + Node_1 + N_a - 3, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num3 / 2) < (Num3 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 5 + 1), 6 + Num2 - 1, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num5 - Node_55 + Num4 + Num3 - 1), 1 + Num2 + Node_11, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num2 / 2); i++)// num 16(2) :  26 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num3 - 3), -(Num3 - 3) + 2, 0, 1, Num2 + Node11 - 1, Num2 + Node11,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2 / 2 - 1) ://node2: 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num3 - 5), -(Num3 - 5) + 2, -1, 0, Num2 / 2 + Node_1 - 4 + 1, Num2 / 2 + Node_1 - 4 + 1 + 1,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) % 2 == 0)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 5),
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2), Coef, Coef_location);
+			}
+			else//1 lei  2j left
+			{
+				kind1_node(j, j - offset, -(Num3 - 5), -1, 0, 1,
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2),
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2) + 1,
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2) + (Num1 - N_d0 + 2),
+					(Num2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) + Node11 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9) / 2) + 1 + (Num1 - N_d0 + 2),
+					A4_2, A3_2, A5_2, A3_2, A1_2, A1_2, A2_2, A2_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Num2 / 2);
+		i<(Nx_2 + Nx_3 + Num1 + Num2 * 2 + Num3 * 2 + Num4 * 2 + Num5 * 2 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9); i++)// num 16(2) :  26 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(6 + Num2 - 1) - 2, -(6 + Num2 - 1), 0, 1, Num2 / 2 + Node13 - 1, Num2 / 2 + Node13,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2 / 2 - 1) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(6 + Num2 - 1), -(6 + Num2 - 1) + 2, -1, 0, Node_11 - 4 + 1, Node_11 - 4 + 1 + 1,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) % 2 == 0)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(6 + Num2 - 1), Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2,
+					Coef, Coef_location);
+			}
+			else//1 lei 2j left
+			{
+				kind1_node(j, j - offset, -(6 + Num2 - 1), -1, 0, 1,
+					(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2),
+					(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2) + 1,
+					(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2) + (Num1 - Node_11 + Nx_3 - 1),
+					(Num2 / 2 - (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) + Node13 + (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 * 2 - Num4 * 2 - Num5 * 2 - Num6 * 2 - Num7 * 2 - Num8 * 2 - Num9 - Num2 / 2) / 2) + 1 + (Num1 - Node_11 + Nx_3 - 1),
+					A4_2, A3_2, A5_2, A3_2, A1_2, A1_2, A2_2, A2_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (num_total - Nx_2 - Nx_3 - Num1); i<(num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i++)// circle num17(1) Nx_2:  74 node!  part1 !
+	{
+		switch (i - num_total + Nx_2 + Nx_3 + Num1)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Num5 - Num4 - Num3 - Num2, -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - num_total + Nx_2 + Nx_3 + Num1) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num5 - Num4 - Num3 - Num2, Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (N_d0 - 3)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node11))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 + Num2 + N_d0 - 2), Num1 - N_d0 + 2, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node11) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node12))// 2 lei right 2j !
+			{
+				kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node11) * 2),
+					-1, 0, 1, Num1 - N_d0 + 2, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + 1 + Num2 + Node_1), Num1 - N_d0 + 2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (num_total - Nx_2 - Nx_3 - Num1 + Node_1 + 2); i<(num_total - Nx_2 - Nx_3); i++)// circle num17(1) Nx_2:  74 node!  part2 !
+	{
+		switch (i - num_total + Nx_2 + Nx_3 + Num1)
+		{
+		case (Num1 - 1) :
+			boundary_node(j, j - offset, 2, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_11 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -Num1 - Num2 - Num3 - Num4, -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - num_total + Nx_2 + Nx_3 + Num1) < (Node_1 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -(Num5 - Node_5 + Num4 + Num3 + Num2 + Node_1), Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) > (Node_1 + N_a - 4)) && ((i - num_total + Nx_2 + Nx_3 + Num1) < Node13))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + Num2 + Node_1 + N_a - 3), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node13) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node14))// 2 lei left 2j !
+			{
+				kind2_node(j, j - offset, -((i - num_total + Nx_2 + Nx_3 + Num1) + Num2 / 2 - (i - num_total + Nx_2 + Nx_3 + Num1 - Node13) * 2),
+					-1, 0, 1, Num1 - Node_11 + Nx_3 - 1, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1) >= Node14) && ((i - num_total + Nx_2 + Nx_3 + Num1) <= Node_11))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num2 + Node_11 + 1), Num1 - Node_11 + Nx_3 - 1, Coef, Coef_location);
+			}
+			else
+			{
+				inner_5node(j, j - offset, 4, -Num1 - Num2 - Num3 - Num4, Nx_2 + Nx_3, Coef, Coef_location);// 4dx!
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//cout << "offset:" << j << endl;
+	//====================================================================================================
+	//调用封装函数
+	//left 1 --- right 1
+	scan_coef_Matrix_middle_wrapper(j, Coef, Coef_location, num_total, sizeN - 2 * Num1, offset);
+	//=======================================================================================================================
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3); i<(Nx_2 + Nx_3 + Node_1_p2 + 2); i++)// circle num1 Nx_2:  74 node!  part1 !
+	{
+		switch (i - Nx_2 - Nx_3)
+		{
+		case 0:
+			boundary_node(j, i, 1, -Nx_2 - Nx_3, Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, i, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1_p2 + 1) ://2 lei xia 1j
+			kind2_node(j, i, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, i, 4, -Nx_3 - Nx_2, Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3) < Node11_p2))// 2dx!
+			{
+				inner_5node(j, i, 2, -(Nx_3 + N_d0 - 2), Num1_p2 - N_d0 + 2 + Num2_p2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node11_p2) && ((i - Nx_2 - Nx_3) <= Node12_p2))// 2 lei left 2j !
+			{
+				kind2_node(j, i, -Nx_3 - Nx_2, -(Nx_3 + N_d0 - 2), -1, 0, 1, Num1_p2 - (i - Nx_2 - Nx_3) + ((i - Nx_2 - Nx_3) - Node11_p2) * 2,
+					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, i, 2, -(Nx_3 + N_d0 - 2), Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 / 2 - 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Node_1_p2 + 2); i<(Nx_2 + Nx_3 + Num1_p2); i++)// circle num1 Nx_2:  74 node!  part2 !
+	{
+		switch (i - Nx_2 - Nx_3)
+		{
+		case (Num1_p2 - 1) :
+			boundary_node(j, i, 2, -Nx_2 - Nx_3, Num5_p2 + Num2_p2 + Num3_p2 + Num4_p2, Coef, Coef_location);
+			break;
+		case (Node_1_p2 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, i, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_11_p2 + 1) ://2 lei xia 1j
+			kind2_node(j, i, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num5_p2 + Num2_p2 + Num3_p2 + Num4_p2,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3) < (Node_1_p2 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, i, 4, -Nx_3 - Nx_2, Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) > (Node_1_p2 + N_a - 4)) && ((i - Nx_2 - Nx_3) < Node13_p2))// 2dx!
+			{
+				inner_5node(j, i, 2, -(Node_11_p2 + 1), Num1_p2 - Node_1_p2 - N_a + 3 + Num2_p2 + Num3_p2 / 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node13_p2) && ((i - Nx_2 - Nx_3) <= Node14_p2))// 2 lei left 2j !
+			{
+				kind2_node(j, i, -Nx_3 - Nx_2, -(Node_11_p2 + 1), -1, 0, 1, Num1_p2 - (i - Nx_2 - Nx_3) + Num2_p2 / 2 + ((i - Nx_2 - Nx_3) - Node13_p2) * 2,
+					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node14_p2) && ((i - Nx_2 - Nx_3) <= Node_11_p2))// 2dx
+			{
+				inner_5node(j, i, 2, -(Node_11_p2 + 1), Num1_p2 - Node_11_p2 + Num2_p2 + Num3_p2 - 1, Coef, Coef_location);
+			}
+			else
+			{
+				inner_5node(j, i, 4, -(Nx_3 + Nx_2), Num5_p2 + Num2_p2 + Num3_p2 + Num4_p2, Coef, Coef_location);// 4dx!
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!!!!!!!!!
+	for (i = (Nx_2 + Nx_3 + Num1_p2); i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 / 2); i++)// num 2 :  26 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, i, -(Num1_p2 - Node11_p2) - 1, -(Num1_p2 - Node11_p2), 0, 1, Num2_p2 + 5 - 2, Num2_p2 + 5,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2_p2 / 2 - 1) ://node2: 3 lei 2j xia
+			kind3_node(j, i, -(Num1_p2 - Node12_p2 + Num2_p2 / 2 - 1), -(Num1_p2 - Node12_p2 + Num2_p2 / 2 - 1) + 1, -1, 0,
+			Num2_p2 + 5, Num2_p2 + 5 + 2, C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2) % 2 == 0)// 1dx
+			{
+				inner_5node(j, i, 1, -((i - Nx_2 - Nx_3 - Num1_p2) + Num1_p2 - Node11_p2 - (i - Nx_2 - Nx_3 - Num1_p2) / 2), Num2_p2 + 5, Coef, Coef_location);
+			}
+			else//1 lei  2j left
+			{
+				kind1_node(j, i, -((i - Nx_2 - Nx_3 - Num1_p2) + Num1_p2 - Node11_p2 - (i - Nx_2 - Nx_3 - Num1_p2) / 2) - (Nx_3 + N_d0 - 2),
+					-((i - Nx_2 - Nx_3 - Num1_p2) + Num1_p2 - Node11_p2 - (i - Nx_2 - Nx_3 - Num1_p2) / 2) - (Nx_3 + N_d0 - 2) + 1,
+					-((i - Nx_2 - Nx_3 - Num1_p2) + Num1_p2 - Node11_p2 - (i - Nx_2 - Nx_3 - Num1_p2) / 2),
+					-((i - Nx_2 - Nx_3 - Num1_p2) + Num1_p2 - Node11_p2 - (i - Nx_2 - Nx_3 - Num1_p2) / 2) + 1,
+					-1, 0, 1, 5 + Num2_p2, A2_2, A2_2, A1_2, A1_2, A3_2, A5_2, A3_2, A4_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 / 2); i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2); i++)// num 2 :  26 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, i, -(Num1_p2 - Node13_p2 + Num2_p2 / 2) - 1, -(Num1_p2 - Node13_p2 + Num2_p2 / 2), 0, 1,
+				Num3_p2 - 5 - 2, Num3_p2 - 5, C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2_p2 / 2 - 1) :// 3 lei 2j xia
+			kind3_node(j, i, -(Num1_p2 - Node14_p2 + Num2_p2 - 1), -(Num1_p2 - Node14_p2 + Num2_p2 - 1) + 1, -1, 0,
+			Num3_p2 - 5, Num3_p2 - 5 + 2, C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) % 2 == 0)// 1dx
+			{
+				inner_5node(j, i, 1, -((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) + Num1_p2 - Node13_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) / 2) - Num2_p2 / 2,
+					Num3_p2 - 5, Coef, Coef_location);
+			}
+			else//1 lei 2j left
+			{
+				kind1_node(j, i, -((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) + Num1_p2 - Node13_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) / 2) - Num2_p2 / 2 - (Node_11_p2 + 1),
+					-((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) + Num1_p2 - Node13_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) / 2) - Num2_p2 / 2 - (Node_11_p2 + 1) + 1,
+					-((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) + Num1_p2 - Node13_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) / 2) - Num2_p2 / 2,
+					-((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) + Num1_p2 - Node13_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 / 2) / 2) - Num2_p2 / 2 + 1,
+					-1, 0, 1, Num3_p2 - 5, A2_2, A2_2, A1_2, A1_2, A3_2, A5_2, A3_2, A4_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!!!
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2); i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 / 2); i++)// num 3 :  46 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, i, -(Num1_p2 - N_d0 + 2 + Num2_p2) - 2, -(Num1_p2 - N_d0 + 2 + Num2_p2) - 1, -(Num1_p2 - N_d0 + 2 + Num2_p2),
+				0, 1, Num3_p2 + Num4_p2 + N_d0 - 2 - 2, Num3_p2 + Num4_p2 + N_d0 - 2 - 1, Num3_p2 + Num4_p2 + N_d0 - 2,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, i, -(Num1_p2 - N_d0 + 2 + Num2_p2), -2, -1, 0, 1, Num3_p2 + Num4_p2 + N_d0 - 2,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, i, -(Num1_p2 - N_d0 + 2 + Num2_p2) - 1, -(Num1_p2 - N_d0 + 2 + Num2_p2), -1, 0, 1, Num3_p2 - 4,
+				C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, i, -(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 / 2 - 1), -(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 / 2 - 1) + 1,
+			-1, 0, 1, Num3_p2 - 4, C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, i, -(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 / 2 - 1), -1, 0, 1, 2, Num3_p2 / 2 + 1 + Num4_p2 + Node_5_p2,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, i, -(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 / 2 - 1), -(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 / 2 - 1) + 1,
+			-(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 / 2 - 1) + 2, -1, 0,
+			Num3_p2 / 2 + 1 + Num4_p2 + Node_5_p2, Num3_p2 / 2 + 1 + Num4_p2 + Node_5_p2 + 1, Num3_p2 / 2 + 1 + Num4_p2 + Node_5_p2 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2) < 3)// 2dx
+			{
+				inner_5node(j, i, 2, -(Num1_p2 - N_d0 + 2 + Num2_p2), Num3_p2 + Num4_p2 + N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2) > 4) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2) < (Num3_p2 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num2_p2 + 5), Num3_p2 - 4, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, i, 2, -(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 / 2 - 1), Num3_p2 / 2 + 1 + Num4_p2 + Node_5_p2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 / 2); i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2); i++)// num 3 :  46 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 / 2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, i, -(Num1_p2 - Node_1_p2 - N_a + 3 + Num2_p2 + Num3_p2 / 2) - 2, -(Num1_p2 - Node_1_p2 - N_a + 3 + Num2_p2 + Num3_p2 / 2) - 1,
+				-(Num1_p2 - Node_1_p2 - N_a + 3 + Num2_p2 + Num3_p2 / 2), 0, 1, Num3_p2 / 2 + Num4_p2 + Node_5_p2 + N_a - 3 - 2,
+				Num3_p2 / 2 + Num4_p2 + Node_5_p2 + N_a - 3 - 1, Num3_p2 / 2 + Num4_p2 + Node_5_p2 + N_a - 3,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, i, -(Num1_p2 - Node_1_p2 - N_a + 3 + Num2_p2 + Num3_p2 / 2), -2, -1, 0, 1,
+				Num3_p2 / 2 + Num4_p2 + Node_5_p2 + N_a - 3, B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, i, -(Num1_p2 - Node_1_p2 - N_a + 3 + Num2_p2 + Num3_p2 / 2) - 1, -(Num1_p2 - Node_1_p2 - N_a + 3 + Num2_p2 + Num3_p2 / 2),
+				-1, 0, 1, 5 + Num4_p2 - 1, C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, i, -(Num1_p2 - Node_11_p2 + Num2_p2 + Num3_p2 - 1), -(Num1_p2 - Node_11_p2 + Num2_p2 + Num3_p2 - 1) + 1,
+			-1, 0, 1, 5 + Num4_p2 - 1, C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, i, -(Num1_p2 - Node_11_p2 + Num2_p2 + Num3_p2 - 1), -1, 0, 1, 2, 1 + Num4_p2 + Node_55_p2,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, i, -(Num1_p2 - Node_11_p2 + Num2_p2 + Num3_p2 - 1), -(Num1_p2 - Node_11_p2 + Num2_p2 + Num3_p2 - 1) + 1,
+			-(Num1_p2 - Node_11_p2 + Num2_p2 + Num3_p2 - 1) + 2, -1, 0,
+			1 + Num4_p2 + Node_55_p2, 1 + Num4_p2 + Node_55_p2 + 1, 1 + Num4_p2 + Node_55_p2 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 / 2) < 3)// 2dx
+			{
+				inner_5node(j, i, 2, -(Num1_p2 - Node_1_p2 - N_a + 3 + Num2_p2 + Num3_p2 / 2), Num3_p2 / 2 + Num4_p2 + Node_5_p2 + N_a - 3, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 / 2) > 4) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 / 2) < (Num3_p2 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num3_p2 - 5), 5 + Num4_p2 - 1, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, i, 2, -(Num1_p2 - Node_11_p2 + Num2_p2 + Num3_p2 - 1), 1 + Num4_p2 + Node_55_p2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2);
+		i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 / 2); i++)// num 4 :  30 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2)
+		{
+		case 0:// 1 lei 2j shang
+			kind1_node(j, i, -(Num3_p2 - 4) - 2, -(Num3_p2 - 4) - 1, -(Num3_p2 - 4), 0, 1,
+				Num4_p2 + N_d0 + 2 - 2, Num4_p2 + N_d0 + 2 - 1, Num4_p2 + N_d0 + 2,
+				A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4_p2 / 2 - 1) :// 1 lei 2j xia
+			kind1_node(j, i, -(Num3_p2 - 4), -(Num3_p2 - 4) + 1, -(Num3_p2 - 4) + 2, -1, 0,
+			Num4_p2 + N_d0 + 2 - N_c1, Num4_p2 + N_d0 + 2 - N_c1 + 1, Num4_p2 + N_d0 + 2 - N_c1 + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2) <= Node41_p2)// 1dx
+			{
+				inner_5node(j, i, 1, -(Num3_p2 - 4), Num4_p2 + N_d0 + 2, Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2) >= Node42_p2) // 1dx
+			{
+				inner_5node(j, i, 1, -(Num3_p2 - 4), Num4_p2 + N_d0 + 2 - N_c1, Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, i, -(Num3_p2 - 4), -1, 0, 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 / 2);
+		i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2); i++)// num 4 :  30 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2)
+		{
+		case (Num4_p2 / 2) :// 1 lei 2j shang
+			kind1_node(j, i, -(5 + Num4_p2 - 1) - 2, -(5 + Num4_p2 - 1) - 1, -(5 + Num4_p2 - 1), 0, 1,
+			(Node_55_p2 - 4 + 1 + N_c1) - 2, (Node_55_p2 - 4 + 1 + N_c1) - 1, (Node_55_p2 - 4 + 1 + N_c1),
+			A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4_p2 - 1) :// 1 lei 2j xia
+			kind1_node(j, i, -(5 + Num4_p2 - 1), -(5 + Num4_p2 - 1) + 1, -(5 + Num4_p2 - 1) + 2, -1, 0,
+			(Node_55_p2 - 4 + 1), (Node_55_p2 - 4 + 1) + 1, (Node_55_p2 - 4 + 1) + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2) <= Node43_p2)// 1dx
+			{
+				inner_5node(j, i, 1, -(5 + Num4_p2 - 1), (Node_55_p2 - 4 + 1 + N_c1), Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2) >= Node44_p2) // 1dx
+			{
+				inner_5node(j, i, 1, -(5 + Num4_p2 - 1), (Node_55_p2 - 4 + 1), Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, i, -(5 + Num4_p2 - 1), -1, 0, 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2);
+		i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2 + 2); i++)// circle num5 :  80 node!  part1 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2)
+		{
+		case 0:
+			boundary_node(j, i, 1, -Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2, Num5_p2 + Num6_p2 + Num7_p2 + Num8_p2, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, i, -Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2, -2, -1, 0, 1, Num5_p2 + Num6_p2 + Num7_p2 + Num8_p2,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (N_d0 + 1) :// 2 lei 2j shang
+			kind2_node(j, i, -(Num3_p2 + Num4_p2 + N_d0 - 2), -2, -1, 0, 1, Num5_p2 - N_d0 + 2 + Num6_p2,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node51_p2:// inner 3 node
+			inner_3node(j, i, -(Num4_p2 + N_d0 + 2), -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
+			break;
+		case (Node51_p2 + 1) :// inner 3 node
+			inner_3node(j, i, -(Num4_p2 + N_d0 + 2) + N_c1, 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node_5_p2 - 3) ://2 lei xia 2j
+			kind2_node(j, i, -(Num3_p2 / 2 + 1 + Num4_p2 + Node_5_p2), -1, 0, 1, 2, Num5_p2 - Node_5_p2 + Num6_p2 + Node72_p2,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_5_p2 + 1) ://2 lei xia 1j
+			kind2_node(j, i, -(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2), -1, 0, 1, 2,
+			Num5_p2 - Node_5_p2 + Num6_p2 + Num7_p2 + Num8_p2 + Node_9_p2,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, i, 4, -Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2, Num5_p2 + Num6_p2 + Num7_p2 + Num8_p2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) < (N_d0 + 1)))// 2dx!
+			{
+				inner_5node(j, i, 2, -(Num3_p2 + Num4_p2 + N_d0 - 2), Num5_p2 - N_d0 + 2 + Num6_p2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) > (N_d0 + 1)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) < Node51_p2))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num4_p2 + N_d0 + 2), Num5_p2 - N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) > (Node51_p2 + 1)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) < (Node_5_p2 - 3)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num4_p2 + N_d0 + 2) + N_c1, Num5_p2 - N_d0 - 2 - 2, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, i, 2, -(Num3_p2 / 2 + 1 + Num4_p2 + Node_5_p2), Num5_p2 - Node_5_p2 + Num6_p2 + Node72_p2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2 + 2);
+		i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node53_p2 + 3); i++)// circle num5 :  80 node!  part2 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2)
+		{
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) < Node52_p2)// inner 5 node 4dx
+			{
+				inner_5node(j, i, 4, -(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2), Num5_p2 - Node_5_p2 + Num6_p2 + Num7_p2 + Num8_p2 + Node_9_p2, Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) > Node53_p2)// inner 5 node 4dx
+			{
+				inner_5node(j, i, 4, -(Num1_p2 - Node_1_p2 - 9 + Num2_p2 + Num3_p2 + Num4_p2 + Node53_p2),
+					Num5_p2 - Node53_p2 + Num6_p2 + Num7_p2 + Num8_p2 + Node93_p2, Coef, Coef_location);
+			}
+			else// left  2lei 1j
+			{
+				kind2_node(j, i, -Nx_3 - Nx_2 - (Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2),
+					-(Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2), -1, 0, 1,
+					Num5_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) + Num6_p2 + Node72_p2 + 1 + (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Node52_p2) * 2,
+					B5, B4, B3, B1_1, B3, B2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//**********************************************************************************!!!!!!!!!!!!
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node53_p2 + 3);
+		i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Num5_p2); i++)// circle num5 :  80 node!  part3 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2)
+		{
+		case (Num5_p2 - 1) :
+			boundary_node(j, i, 2, -Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2, Num6_p2 + Num7_p2 + Num8_p2 + Num9_p2, Coef, Coef_location);
+			break;
+		case (Node53_p2 + 3) ://2 lei shang 1j
+			kind2_node(j, i, -(Num1_p2 - Node_1_p2 - 9 + Num2_p2 + Num3_p2 + Num4_p2 + Node53_p2), -2, -1, 0, 1, Num5_p2 - Node53_p2 + Num6_p2 + Num7_p2 + Num8_p2 + Node93_p2,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node53_p2 + 7) :// 2 lei 2j shang
+			kind2_node(j, i, -(Num3_p2 / 2 + Num4_p2 + Node53_p2 + 4), -2, -1, 0, 1, Num5_p2 - Node53_p2 - 4 + Num6_p2 + Node73_p2,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node54_p2:// inner 3 node
+			inner_3node(j, i, -(Node_55_p2 - 4 + 1) - N_c1, -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
+			break;
+		case (Node54_p2 + 1) :// inner 3 node
+			inner_3node(j, i, -(Node_55_p2 - 4 + 1), 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node_55_p2 - 3) ://2 lei xia 2j
+			kind2_node(j, i, -(Num4_p2 + Node_55_p2 + 1), -1, 0, 1, 2, Num5_p2 - Node_55_p2 + Num6_p2 + Num7_p2 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_55_p2 + 1) ://2 lei xia 1j
+			kind2_node(j, i, -Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2, -1, 0, 1, 2, Num6_p2 + Num7_p2 + Num8_p2 + Num9_p2,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) < (Node53_p2 + 7))// 2dx!
+			{
+				inner_5node(j, i, 2, -(Num3_p2 / 2 + Num4_p2 + Node53_p2 + 4), Num5_p2 - Node53_p2 - 4 + Num6_p2 + Node73_p2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) > (Node53_p2 + 7)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) < Node54_p2))// 1dx
+			{
+				inner_5node(j, i, 1, -(Node_55_p2 - 4 + 1) - N_c1, (Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1) + 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) > (Node54_p2 + 1)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) < (Node_55_p2 - 3)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Node_55_p2 - 4 + 1), (Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1), Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) > (Node_55_p2 - 3)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2) < (Node_55_p2 + 1)))// 2dx
+			{
+				inner_5node(j, i, 2, -(Num4_p2 + Node_55_p2 + 1), Num5_p2 - Node_55_p2 + Num6_p2 + Num7_p2 - 1, Coef, Coef_location);
+			}
+			else// 4dx!
+			{
+				inner_5node(j, i, 4, -Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2, Num6_p2 + Num7_p2 + Num8_p2 + Num9_p2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Num5_p2);
+		i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Num5_p2 + Num6_p2); i++)// num 6 :  16 node!
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2)
+		{
+		case 0:// 1 lei 2j shang
+			kind1_node(j, i, -(Num5_p2 - N_d0 - 2) - 2, -(Num5_p2 - N_d0 - 2) - 1, -(Num5_p2 - N_d0 - 2), 0, 1, Num6_p2 + 4 - 2,
+				Num6_p2 + 4 - 1, Num6_p2 + 4, A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case Node61_p2:// inner 3 node
+			inner_3node(j, i, -(Num5_p2 - N_d0 - 2), -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
+			break;
+		case (Node61_p2 + 1) :// inner 3 node
+			inner_3node(j, i, -(Num5_p2 - N_d0 - 2 - 2), 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Num6_p2 / 2 - 1) :// 1 lei 2j xia
+			kind1_node(j, i, -(Num5_p2 - N_d0 - 2 - 2), -(Num5_p2 - N_d0 - 2 - 2) + 1, -(Num5_p2 - N_d0 - 2 - 2) + 2, -1, 0,
+			Num6_p2 + 4 - 2, Num6_p2 + 4 - 2 + 1, Num6_p2 + 4 - 2 + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		case (Num6_p2 / 2) :// 1 lei 2j shang
+			kind1_node(j, i, -(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1) - 2 - 2, -(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1) - 2 - 1,
+			-(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1) - 2, 0, 1, Num7_p2 - 4 + 2 - 2, Num7_p2 - 4 + 2 - 1, Num7_p2 - 4 + 2,
+			A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case Node62_p2:// inner 3 node
+			inner_3node(j, i, -(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1) - 2, -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
+			break;
+		case (Node62_p2 + 1) :// inner 3 node
+			inner_3node(j, i, -(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1), 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Num6_p2 - 1) :// 1 lei 2j xia
+			kind1_node(j, i, -(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1), -(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1) + 1,
+			-(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1) + 2, -1, 0, Num7_p2 - 4, Num7_p2 - 4 + 1, Num7_p2 - 4 + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2) < Node61_p2)// 1dx
+			{
+				inner_5node(j, i, 1, -(Num5_p2 - N_d0 - 2), Num6_p2 + 4, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2) > (Node61_p2 + 1)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2) < (Num6_p2 / 2 - 1)))// 2dx
+			{
+				inner_5node(j, i, 1, -(Num5_p2 - N_d0 - 2 - 2), Num6_p2 + 4 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2) > (Num6_p2 / 2)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2) < Node62_p2))// 2dx
+			{
+				inner_5node(j, i, 1, -(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1) - 2, Num7_p2 - 4 + 2, Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_5node(j, i, 1, -(Num5_p2 - Node_55_p2 + 4 + Num6_p2 - 1), Num7_p2 - 4, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!!
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Num5_p2 + Num6_p2);
+		i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Num5_p2 + Num6_p2 + Node72_p2 + 1); i++)// num 7 :  39 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, i, -(Num5_p2 - N_d0 + 2 + Num6_p2) - 2, -(Num5_p2 - N_d0 + 2 + Num6_p2) - 1, -(Num5_p2 - N_d0 + 2 + Num6_p2),
+				0, 1, Num7_p2 + Num8_p2 + N_d0 - 2 - 2, Num7_p2 + Num8_p2 + N_d0 - 2 - 1, Num7_p2 + Num8_p2 + N_d0 - 2,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, i, -(Num5_p2 - N_d0 + 2 + Num6_p2), -2, -1, 0, 1, Num7_p2 + Num8_p2 + N_d0 - 2,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node71_p2://inner 4 node
+			inner_4node(j, i, -(Num6_p2 + 4), -1, 0, Num7_p2 - 4, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node71_p2 + 1) ://inner 4 node
+			inner_4node(j, i, -(Num6_p2 + 4) + 2, 0, 1, Num7_p2 - 4, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Node72_p2 - 3) :// 2 lei 2j xia
+			kind2_node(j, i, -(Num5_p2 - Node_5_p2 + Num6_p2 + Node72_p2), -1, 0, 1, 2, Num7_p2 - Node72_p2 + Num8_p2 + Node_9_p2,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case Node72_p2:// 1 lei 1j xia
+			kind1_node(j, i, -(Num5_p2 - Node_5_p2 + Num6_p2 + Node72_p2), -(Num5_p2 - Node_5_p2 + Num6_p2 + Node72_p2) + 1,
+				-(Num5_p2 - Node_5_p2 + Num6_p2 + Node72_p2) + 2, -1, 0, Num7_p2 - Node72_p2 + Num8_p2 + Node_9_p2,
+				Num7_p2 - Node72_p2 + Num8_p2 + Node_9_p2 + 1, Num7_p2 - Node72_p2 + Num8_p2 + Node_9_p2 + 2,
+				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) < 3)// 2dx
+			{
+				inner_5node(j, i, 2, -(Num5_p2 - N_d0 + 2 + Num6_p2), Num7_p2 + Num8_p2 + N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) > 3) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) < (Node71_p2)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num6_p2 + 4), Num7_p2 - 4, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) > (Node71_p2 + 1)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) < (Node72_p2 - 3)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num6_p2 + 4) + 2, Num7_p2 - 4, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, i, 2, -(Num5_p2 - Node_5_p2 + Num6_p2 + Node72_p2), Num7_p2 - Node72_p2 + Num8_p2 + Node_9_p2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Num5_p2 + Num6_p2 + Node72_p2 + 1);
+		i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Num5_p2 + Num6_p2 + Node73_p2); i++)// num 7 :  39 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2 - Node72_p2 - 1)
+		{
+		case 0:// 3 lei 1j shang
+			kind3_node(j, i, -(Num5_p2 - Node52_p2 + Num6_p2 + Node72_p2 + 1) - 1, -(Num5_p2 - Node52_p2 + Num6_p2 + Node72_p2 + 1),
+				0, 1, (Num7_p2 - Node72_p2 + Num8_p2 + Node92_p2) - 2, (Num7_p2 - Node72_p2 + Num8_p2 + Node92_p2),
+				C4, C3_1, C1_1, C2_1, C4, C3_1, Coef, Coef_location);
+			break;
+		case 10:// 3 lei 1j xia
+			kind3_node(j, i, -(Num5_p2 - Node53_p2 + Num6_p2 + Node73_p2 - 1), -(Num5_p2 - Node53_p2 + Num6_p2 + Node73_p2 - 1) + 1,
+				-1, 0, (Num7_p2 - Node72_p2 + Num8_p2 + Node92_p2), (Num7_p2 - Node72_p2 + Num8_p2 + Node92_p2) + 2,
+				C3_1, C4, C2_1, C1_1, C3_1, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2 - Node72_p2 - 1) % 2 == 0)// 1dx
+			{
+				inner_5node(j, i, 2, -((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) + Num6_p2 + Num5_p2 - Node52_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2 - Node72_p2 - 1) / 2),
+					(Num7_p2 - Node72_p2 + Num8_p2 + Node92_p2), Coef, Coef_location);
+			}
+			else//1 lei  1j left
+			{
+				kind1_node(j, i, -((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) + Num6_p2 + Num5_p2 - Node52_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2 - Node72_p2 - 1) / 2) - (Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2),
+					-((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) + Num6_p2 + Num5_p2 - Node52_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2 - Node72_p2 - 1) / 2) - (Num1_p2 - Node_1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2) + 1,
+					-((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) + Num6_p2 + Num5_p2 - Node52_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2 - Node72_p2 - 1) / 2),
+					-((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) + Num6_p2 + Num5_p2 - Node52_p2 - (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2 - Node72_p2 - 1) / 2) + 1,
+					-1, 0, 1, (Num7_p2 - Node72_p2 + Num8_p2 + Node92_p2), A2_1, A2_1, A1_1, A1_1, A3_1, A5_1, A3_1, A4_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Num5_p2 + Num6_p2 + Node73_p2);
+		i<(Nx_2 + Nx_3 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Num5_p2 + Num6_p2 + Num7_p2); i++)// num 7 :  39 node! part3
+	{
+		switch (i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2)
+		{
+		case Node73_p2:// 1 lei 1j shang
+			kind1_node(j, i, -(Num5_p2 - Node53_p2 - 4 + Num6_p2 + Node73_p2) - 2, -(Num5_p2 - Node53_p2 - 4 + Num6_p2 + Node73_p2) - 1,
+				-(Num5_p2 - Node53_p2 - 4 + Num6_p2 + Node73_p2), 0, 1, Num7_p2 - Node73_p2 + Num8_p2 + Node93_p2 + 4 - 2,
+				Num7_p2 - Node73_p2 + Num8_p2 + Node93_p2 + 4 - 1, Num7_p2 - Node73_p2 + Num8_p2 + Node93_p2 + 4,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case (Node73_p2 + 3) :// 2 lei 2j shang
+			kind2_node(j, i, -(Num5_p2 - Node53_p2 - 4 + Num6_p2 + Node73_p2), -2, -1, 0, 1,
+			Num7_p2 - Node73_p2 + Num8_p2 + Node93_p2 + 4, B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node74_p2://inner 4 node
+			inner_4node(j, i, -(Num7_p2 - 5 + 1) - 2, -1, 0, 5 + Num8_p2 - 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node74_p2 + 1) ://inner 4 node
+			inner_4node(j, i, -(Num7_p2 - 5 + 1), 0, 1, 5 + Num8_p2 - 1, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Num7_p2 - 4) :// 2 lei 2j xia
+			kind2_node(j, i, -(Num5_p2 - Node_55_p2 + Num6_p2 + Num7_p2 - 1), -1, 0, 1, 2, 1 + Num8_p2 + Node_99_p2,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num7_p2 - 1) :// 1 lei 1j xia
+			kind1_node(j, i, -(Num5_p2 - Node_55_p2 + Num6_p2 + Num7_p2 - 1), -(Num5_p2 - Node_55_p2 + Num6_p2 + Num7_p2 - 1) + 1,
+			-(Num5_p2 - Node_55_p2 + Num6_p2 + Num7_p2 - 1) + 2, -1, 0,
+			1 + Num8_p2 + Node_99_p2, 1 + Num8_p2 + Node_99_p2 + 1, 1 + Num8_p2 + Node_99_p2 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) < (Node73_p2 + 3))// 2dx
+			{
+				inner_5node(j, i, 2, -(Num5_p2 - Node53_p2 - 4 + Num6_p2 + Node73_p2), Num7_p2 - Node73_p2 + Num8_p2 + Node93_p2 + 4, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) > (Node73_p2 + 3)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) < (Node74_p2)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num7_p2 - 5 + 1) - 2, 5 + Num8_p2 - 1, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) > (Node74_p2 + 1)) && ((i - Nx_2 - Nx_3 - Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2 - Num5_p2 - Num6_p2) < (Num7_p2 - 4)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num7_p2 - 5 + 1), 5 + Num8_p2 - 1, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, i, 2, -(Num5_p2 - Node_55_p2 + Num6_p2 + Num7_p2 - 1), 1 + Num8_p2 + Node_99_p2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//**************************************************************
+	cout << "middle_7区域节点数:" << j << endl;
+	if (j == sizeM)
+		cout << "middle_7 passed..." << endl;
+	else
+		cout << "middle_7 failed..." << endl;
+	//修正矩阵，将不在本区域的节点刨除
+	for (int i = 0; i != sizeM; i++)
+		for (int j = 0; j != N_matrix; j++){
+		if (Coef_location[i][j] < 0 || Coef_location[i][j] >= sizeN)
+			Coef_location[i][j] = -1;
+		}
+	if (Debug)
+	{
+		ofstream outFile_Coef("middle_7.txt");
+		if (!outFile_Coef)
+		{
+			cout << "Can't write the coefficient matrix into file !" << endl;
+			exit(1);//Terminate with fault
+		}
+		else
+		{
+			int i, j;
+			for (i = 0; i < sizeM; i++)
+			{
+				for (j = 0; j < N_matrix; j++)
+				{
+					if ((Coef[i][j].real != 0 || Coef[i][j].image != 0) && Coef_location[i][j] >= 0)
+						outFile_Coef << Coef[i][j].real << "+j*" << Coef[i][j].image << " (" << i << "," << Coef_location[i][j] << ") ";
+				}
+				outFile_Coef << endl << endl;
+			}
+		}
+		outFile_Coef.close();
+	}
+
+};
+void scan_coef_Matrix_middle_5(complex** Coef, int num_total, int ** Coef_location, int sizeM, int sizeN, int offset)
+{
+	int i = 0, j = 0, m = 0;
+	for (j = 0; j<num_total; j++)         //系数矩阵初始置零
+	{
+		for (i = 0; i<N_matrix; i++)
+		{
+			Coef[j][i].real = 0;
+			Coef[j][i].image = 0;
+			Coef_location[j][i] = -1;//初始化为负值
+		}
+	}
+	j = 0;
+	//******************************************************************************************!!! num 31 !!!
+	for (i = (M_post2_q3 + Num8_p2); i<(M_post2_q3 + Num8_p2 + Node72_p2 + 1); i++)// num 31(7) :  39 node! part1
+	{
+		switch (i - M_post2_q3 - Num8_p2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, i, -(Num9_p2 - N_d0 + 2 + Num8_p2) - 2, -(Num9_p2 - N_d0 + 2 + Num8_p2) - 1, -(Num9_p2 - N_d0 + 2 + Num8_p2),
+				0, 1, Num7_p2 + Num6_p2 + N_d0 - 2 - 2, Num7_p2 + Num6_p2 + N_d0 - 2 - 1, Num7_p2 + Num6_p2 + N_d0 - 2,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, i, -(Num9_p2 - N_d0 + 2 + Num8_p2), -2, -1, 0, 1, Num7_p2 + Num6_p2 + N_d0 - 2,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node71_p2://inner 4 node
+			inner_4node(j, i, -(Num8_p2 + 4), -1, 0, Num7_p2 - 4, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node71_p2 + 1) ://inner 4 node
+			inner_4node(j, i, -(Num8_p2 + 4), 0, 1, Num7_p2 - 4 + 2, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Node72_p2 - 3) :// 2 lei 2j xia
+			kind2_node(j, i, -(Num9_p2 - Node_9_p2 + Num8_p2 + Node72_p2), -1, 0, 1, 2, (Num7_p2 - Node72_p2 + Num6_p2 + Node_5_p2),
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case Node72_p2:// 1 lei 1j xia
+			kind1_node(j, i, -(Num9_p2 - Node_9_p2 + Num8_p2 + Node72_p2), -(Num9_p2 - Node_9_p2 + Num8_p2 + Node72_p2) + 1,
+				-(Num9_p2 - Node_9_p2 + Num8_p2 + Node72_p2) + 2, -1, 0, (Num7_p2 - Node72_p2 + Num6_p2 + Node_5_p2),
+				(Num7_p2 - Node72_p2 + Num6_p2 + Node_5_p2) + 1, (Num7_p2 - Node72_p2 + Num6_p2 + Node_5_p2) + 2,
+				A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2) < 3)// 2dx
+			{
+				inner_5node(j, i, 2, -(Num9_p2 - N_d0 + 2 + Num8_p2), Num7_p2 + Num6_p2 + N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2) > 3) && ((i - M_post2_q3 - Num8_p2) < (Node71_p2)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num8_p2 + 4), Num7_p2 - 4, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2) > (Node71_p2 + 1)) && ((i - M_post2_q3 - Num8_p2) < (Node72_p2 - 3)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num8_p2 + 4), Num7_p2 - 4 + 2, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, i, 2, -(Num9_p2 - Node_9_p2 + Num8_p2 + Node72_p2), (Num7_p2 - Node72_p2 + Num6_p2 + Node_5_p2), Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (M_post2_q3 + Num8_p2 + Node72_p2 + 1); i<(M_post2_q3 + Num8_p2 + Node73_p2); i++)// num 31(7) :  39 node! part2
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Node72_p2 - 1)
+		{
+		case 0:// 3 lei 1j shang
+			kind3_node(j, i, -(Num9_p2 - Node92_p2 + Num8_p2 + Node72_p2) - 2, -(Num9_p2 - Node92_p2 + Num8_p2 + Node72_p2),
+				0, 1, (Num7_p2 - Node72_p2 - 1 + Num6_p2 + Node52_p2) - 1, (Num7_p2 - Node72_p2 - 1 + Num6_p2 + Node52_p2),
+				C4, C3_1, C1_1, C2_1, C4, C3_1, Coef, Coef_location);
+			break;
+		case 10:// 3 lei 1j xia
+			kind3_node(j, i, -(Num9_p2 - Node92_p2 + Num8_p2 + Node72_p2), -(Num9_p2 - Node92_p2 + Num8_p2 + Node72_p2) + 2,
+				-1, 0, (Num7_p2 - Node73_p2 + 1 + Num6_p2 + Node53_p2), (Num7_p2 - Node73_p2 + 1 + Num6_p2 + Node53_p2) + 1,
+				C3_1, C4, C2_1, C1_1, C3_1, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Node72_p2 - 1) % 2 == 0)// 1dx
+			{
+				inner_5node(j, i, 2, -(Num9_p2 - Node92_p2 + Num8_p2 + Node72_p2),
+					Num7_p2 - (i - M_post2_q3 - Num8_p2) + Num6_p2 + Node52_p2 + (i - M_post2_q3 - Num8_p2 - Node72_p2 - 1) / 2,
+					Coef, Coef_location);
+			}
+			else//1 lei  1j left
+			{
+				kind1_node(j, i, -(Num9_p2 - Node92_p2 + Num8_p2 + Node72_p2), -1, 0, 1,
+					Num7_p2 - (i - M_post2_q3 - Num8_p2) + Num6_p2 + Node52_p2 + (i - M_post2_q3 - Num8_p2 - Node72_p2 - 1) / 2,
+					Num7_p2 - (i - M_post2_q3 - Num8_p2) + Num6_p2 + Node52_p2 + (i - M_post2_q3 - Num8_p2 - Node72_p2 - 1) / 2 + 1,
+					Num7_p2 - (i - M_post2_q3 - Num8_p2) + Num6_p2 + Node52_p2 + (i - M_post2_q3 - Num8_p2 - Node72_p2 - 1) / 2 + (Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2),
+					Num7_p2 - (i - M_post2_q3 - Num8_p2) + Num6_p2 + Node52_p2 + (i - M_post2_q3 - Num8_p2 - Node72_p2 - 1) / 2 + (Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2) + 1,
+					A4_1, A3_1, A5_1, A3_1, A1_1, A1_1, A2_1, A2_1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (M_post2_q3 + Num8_p2 + Node73_p2); i<(M_post2_q3 + Num8_p2 + Num7_p2); i++)// num 31(7) :  39 node! part3
+	{
+		switch (i - M_post2_q3 - Num8_p2)
+		{
+		case Node73_p2:// 1 lei 1j shang
+			kind1_node(j, i, -(Num9_p2 - Node93_p2 - 4 + Num8_p2 + Node73_p2) - 2, -(Num9_p2 - Node93_p2 - 4 + Num8_p2 + Node73_p2) - 1,
+				-(Num9_p2 - Node93_p2 - 4 + Num8_p2 + Node73_p2), 0, 1, (Num7_p2 - Node73_p2 + Num6_p2 + Node53_p2 + 4) - 2,
+				(Num7_p2 - Node73_p2 + Num6_p2 + Node53_p2 + 4) - 1, (Num7_p2 - Node73_p2 + Num6_p2 + Node53_p2 + 4),
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case (Node73_p2 + 3) :// 2 lei 2j shang
+			kind2_node(j, i, -(Num9_p2 - Node93_p2 - 4 + Num8_p2 + Node73_p2), -2, -1, 0, 1,
+			(Num7_p2 - Node73_p2 + Num6_p2 + Node53_p2 + 4), B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node74_p2://inner 4 node
+			inner_4node(j, i, -(Num7_p2 - 5 + 1), -1, 0, (5 + Num6_p2 - 1) - 2, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node74_p2 + 1) ://inner 4 node
+			inner_4node(j, i, -(Num7_p2 - 5 + 1), 0, 1, 5 + Num6_p2 - 1, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Num7_p2 - 4) :// 2 lei 2j xia
+			kind2_node(j, i, -(Num9_p2 - Node_99_p2 + Num8_p2 + Num7_p2 - 1), -1, 0, 1, 2, (1 + Num6_p2 + Node_55_p2),
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num7_p2 - 1) :// 1 lei 1j xia
+			kind1_node(j, i, -(Num9_p2 - Node_99_p2 + Num8_p2 + Num7_p2 - 1), -(Num9_p2 - Node_99_p2 + Num8_p2 + Num7_p2 - 1) + 1,
+			-(Num9_p2 - Node_99_p2 + Num8_p2 + Num7_p2 - 1) + 2, -1, 0,
+			(1 + Num6_p2 + Node_55_p2), (1 + Num6_p2 + Node_55_p2) + 1, (1 + Num6_p2 + Node_55_p2) + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2) < (Node73_p2 + 3))// 2dx
+			{
+				inner_5node(j, i, 2, -(Num9_p2 - Node93_p2 - 4 + Num8_p2 + Node73_p2), (Num7_p2 - Node73_p2 + Num6_p2 + Node53_p2 + 4), Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2) > (Node73_p2 + 3)) && ((i - M_post2_q3 - Num8_p2) < (Node74_p2)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num7_p2 - 5 + 1), (5 + Num6_p2 - 1) - 2, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2) > (Node74_p2 + 1)) && ((i - M_post2_q3 - Num8_p2) < (Num7_p2 - 4)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num7_p2 - 5 + 1), 5 + Num6_p2 - 1, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, i, 2, -(Num9_p2 - Node_99_p2 + Num8_p2 + Num7_p2 - 1), (1 + Num6_p2 + Node_55_p2), Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!! num 32 !!!
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2); i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2); i++)// num 32(6) :  16 node!
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2)
+		{
+		case 0:// 1 lei 2j shang
+			kind1_node(j, i, -(Num7_p2 - 4) - 2, -(Num7_p2 - 4) - 1, -(Num7_p2 - 4), 0, 1, (Num6_p2 + N_d0 + 2) - 2,
+				(Num6_p2 + N_d0 + 2) - 1, (Num6_p2 + N_d0 + 2), A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case Node61_p2:// inner 3 node
+			inner_3node(j, i, -1, 0, (Num6_p2 + N_d0 + 2), 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node61_p2 + 1) :// inner 3 node
+			inner_3node(j, i, 0, 1, (Num6_p2 + N_d0 + 2) + 2, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Num6_p2 / 2 - 1) :// 1 lei 2j xia
+			kind1_node(j, i, -(Num7_p2 - 4) - 2, -(Num7_p2 - 4) - 2 + 1, -(Num7_p2 - 4) - 2 + 2, -1, 0,
+			(Num6_p2 + N_d0 + 2) + 2, (Num6_p2 + N_d0 + 2) + 2 + 1, (Num6_p2 + N_d0 + 2) + 2 + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		case (Num6_p2 / 2) :// 1 lei 2j shang
+			kind1_node(j, i, -(5 + Num6_p2 - 1) + 2 - 2, -(5 + Num6_p2 - 1) + 2 - 1, -(5 + Num6_p2 - 1) + 2,
+			0, 1, (1 + Node_55_p2 - 4) - 2 - 2, (1 + Node_55_p2 - 4) - 2 - 1, (1 + Node_55_p2 - 4) - 2,
+			A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case Node62_p2:// inner 3 node
+			inner_3node(j, i, -1, 0, (1 + Node_55_p2 - 4) - 2, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node62_p2 + 1) :// inner 3 node
+			inner_3node(j, i, 0, 1, (1 + Node_55_p2 - 4), k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Num6_p2 - 1) :// 1 lei 2j xia
+			kind1_node(j, i, -(5 + Num6_p2 - 1), -(5 + Num6_p2 - 1) + 1, -(5 + Num6_p2 - 1) + 2, -1, 0,
+			(1 + Node_55_p2 - 4), (1 + Node_55_p2 - 4) + 1, (1 + Node_55_p2 - 4) + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2) < Node61_p2)// 1dx
+			{
+				inner_5node(j, i, 1, -(Num7_p2 - 4), (Num6_p2 + N_d0 + 2), Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2) > (Node61_p2 + 1)) && ((i - M_post2_q3 - Num8_p2 - Num7_p2) < (Num6_p2 / 2 - 1)))// 2dx
+			{
+				inner_5node(j, i, 1, -(Num7_p2 - 4) - 2, (Num6_p2 + N_d0 + 2) + 2, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2) > (Num6_p2 / 2)) && ((i - M_post2_q3 - Num8_p2 - Num7_p2) < Node62_p2))// 2dx
+			{
+				inner_5node(j, i, 1, -(5 + Num6_p2 - 1) + 2, (1 + Node_55_p2 - 4) - 2, Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_5node(j, i, 1, -(5 + Num6_p2 - 1), (1 + Node_55_p2 - 4), Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!! num 33 !!!
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2);
+		i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_5_p2 + 2); i++)// circle num 33(5) :  80 node!  part1 !
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2)
+		{
+		case 0:
+			boundary_node(j, i, 1, -Num9_p2 - Num8_p2 - Num7_p2 - Num6_p2, Num5_p2 + Num4_p2 + Num3_p2 + Num2_p2, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, i, -Num9_p2 - Num8_p2 - Num7_p2 - Num6_p2, -2, -1, 0, 1, Num5_p2 + Num4_p2 + Num3_p2 + Num2_p2,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (N_d0 + 1) :// 2 lei 2j shang
+			kind2_node(j, i, -(Num7_p2 + Num6_p2 + N_d0 - 2), -2, -1, 0, 1, Num5_p2 - N_d0 + 2 + Num4_p2,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node51_p2:// inner 3 node
+			inner_3node(j, i, -1, 0, Num5_p2 - N_d0 - 2, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node51_p2 + 1) :// inner 3 node
+			inner_3node(j, i, 0, 1, Num5_p2 - N_d0 - 2 + N_c1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Node_5_p2 - 3) ://2 lei xia 2j
+			kind2_node(j, i, -(Num7_p2 - Node72_p2 + Num6_p2 + Node_5_p2), -1, 0, 1, 2, Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 / 2 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_5_p2 + 1) ://2 lei xia 1j
+			kind2_node(j, i, -(Num9_p2 - Node_9_p2 + Num8_p2 + Num7_p2 + Num6_p2 + Node_5_p2), -1, 0, 1, 2,
+			Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, i, 4, -Num9_p2 - Num8_p2 - Num7_p2 - Num6_p2, Num5_p2 + Num4_p2 + Num3_p2 + Num2_p2, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) > (N_d0 - 3)) && ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) < (N_d0 + 1)))// 2dx!
+			{
+				inner_5node(j, i, 2, -(Num7_p2 + Num6_p2 + N_d0 - 2), Num5_p2 - N_d0 + 2 + Num4_p2, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) > (N_d0 + 1)) && ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) < Node51_p2))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num6_p2 + N_d0 + 2), Num5_p2 - N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) > (Node51_p2 + 1)) && ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) < (Node_5_p2 - 3)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num6_p2 + N_d0 + 2) - 2, Num5_p2 - N_d0 - 2 + N_c1, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, i, 2, -(Num7_p2 - Node72_p2 + Num6_p2 + Node_5_p2), Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 / 2 - 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_5_p2 + 2);
+		i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node53_p2 + 3); i++)// circle num 33(5) :  80 node!  part2 !
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2)
+		{
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) < Node52_p2)// inner 5 node 4dx
+			{
+				inner_5node(j, i, 4, -(Num9_p2 - Node_9_p2 + Num8_p2 + Num7_p2 + Num6_p2 + Node_5_p2), Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2, Coef, Coef_location);
+			}
+			else if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) > Node53_p2)// inner 5 node 4dx
+			{
+				inner_5node(j, i, 4, -(Num9_p2 - Node93_p2 + Num8_p2 + Num7_p2 + Num6_p2 + Node53_p2),
+					(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2), Coef, Coef_location);
+			}
+			else// left  2lei 1j
+			{
+				kind2_node(j, i, -(Num7_p2 - Node72_p2 - 1 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Node52_p2) * 2 + Num6_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2)),
+					-1, 0, 1, (Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2),
+					(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2) + (Nx_2 + Nx_3),
+					B2, B3, B1_1, B3, B4, B5, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node53_p2 + 3);
+		i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2); i++)// circle num 33(5) :  80 node!  part3 !
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2)
+		{
+		case (Num5_p2 - 1) :
+			boundary_node(j, i, 2, -Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2, Num4_p2 + Num3_p2 + Num2_p2 + Num1_p2, Coef, Coef_location);
+			break;
+		case (Node53_p2 + 3) ://2 lei shang 1j
+			kind2_node(j, i, -(Num9_p2 - Node93_p2 + Num8_p2 + Num7_p2 + Num6_p2 + Node53_p2), -2, -1, 0, 1, (Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2),
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node53_p2 + 7) :// 2 lei 2j shang
+			kind2_node(j, i, -(Num7_p2 - Node73_p2 + Num6_p2 + Node53_p2 + 4), -2, -1, 0, 1, Num5_p2 - Node53_p2 - 4 + Num4_p2 + Num3_p2 / 2,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node54_p2:// inner 3 node
+			inner_3node(j, i, -1, 0, (Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1) - N_c1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node54_p2 + 1) :// inner 3 node
+			inner_3node(j, i, 0, 1, (Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1), k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			break;
+		case (Node_55_p2 - 3) ://2 lei xia 2j
+			kind2_node(j, i, -(Num6_p2 + Node_55_p2 + 1), -1, 0, 1, 2, Num5_p2 - Node_55_p2 + Num4_p2 + Num3_p2 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_55_p2 + 1) ://2 lei xia 1j
+			kind2_node(j, i, -Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2, -1, 0, 1, 2, Num4_p2 + Num3_p2 + Num2_p2 + Num1_p2,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) < (Node53_p2 + 7))// 2dx!
+			{
+				inner_5node(j, i, 2, -(Num7_p2 - Node73_p2 + Num6_p2 + Node53_p2 + 4), Num5_p2 - Node53_p2 - 4 + Num4_p2 + Num3_p2 / 2, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) > (Node53_p2 + 7)) && ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) < Node54_p2))// 1dx
+			{
+				inner_5node(j, i, 1, -(Node_55_p2 - 4 + 1) + 2, (Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1) - N_c1, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) > (Node54_p2 + 1)) && ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) < (Node_55_p2 - 3)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Node_55_p2 - 4 + 1), (Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1), Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) > (Node_55_p2 - 3)) && ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2) < (Node_55_p2 + 1)))// 2dx
+			{
+				inner_5node(j, i, 2, -(Num6_p2 + Node_55_p2 + 1), Num5_p2 - Node_55_p2 + Num4_p2 + Num3_p2 - 1, Coef, Coef_location);
+			}
+			else// 4dx!
+			{
+				inner_5node(j, i, 4, -Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2, Num4_p2 + Num3_p2 + Num2_p2 + Num1_p2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!! num 34 !!!
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2);
+		i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2 / 2); i++)// num 34(4) :  30 node! part1
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2)
+		{
+		case 0:// 1 lei 2j shang
+			kind1_node(j, i, -(Num5_p2 - N_d0 - 2) - 2, -(Num5_p2 - N_d0 - 2) - 1, -(Num5_p2 - N_d0 - 2), 0, 1, Num4_p2 + 4 - 2,
+				Num4_p2 + 4 - 1, Num4_p2 + 4, A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4_p2 / 2 - 1) :// 1 lei 2j xia
+			kind1_node(j, i, -(Num5_p2 - N_d0 - 2) - N_c1, -(Num5_p2 - N_d0 - 2) - N_c1 + 1, -(Num5_p2 - N_d0 - 2) - N_c1 + 2,
+			-1, 0, Num4_p2 + 4, Num4_p2 + 4 + 1, Num4_p2 + 4 + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2) <= Node41_p2)// 1dx
+			{
+				inner_5node(j, i, 1, -(Num5_p2 - N_d0 - 2), Num4_p2 + 4, Coef, Coef_location);
+			}
+			else if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2) >= Node42_p2) // 1dx
+			{
+				inner_5node(j, i, 1, -(Num5_p2 - N_d0 - 2) - N_c1, Num4_p2 + 4, Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, i, -1, 0, 1, Num4_p2 + 4, 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2 / 2);
+		i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2); i++)// num 34(4) :  30 node! part2
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2)
+		{
+		case (Num4_p2 / 2) :// 1 lei 2j shang
+			kind1_node(j, i, -(Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1) + N_c1 - 2, -(Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1) + N_c1 - 1,
+			-(Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1) + N_c1, 0, 1, (Num3_p2 - 5 + 1) - 2, (Num3_p2 - 5 + 1) - 1, (Num3_p2 - 5 + 1),
+			A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4_p2 - 1) :// 1 lei 2j xia
+			kind1_node(j, i, -(Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1), -(Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1) + 1,
+			-(Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1) + 2, -1, 0, (Num3_p2 - 5 + 1), (Num3_p2 - 5 + 1) + 1, (Num3_p2 - 5 + 1) + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2) <= Node43_p2)// 1dx
+			{
+				inner_5node(j, i, 1, -(Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1) + N_c1, (Num3_p2 - 5 + 1), Coef, Coef_location);
+			}
+			else if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2) >= Node44_p2) // 1dx
+			{
+				inner_5node(j, i, 1, -(Num5_p2 - Node_55_p2 + 4 + Num4_p2 - 1), (Num3_p2 - 5 + 1), Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, i, -1, 0, 1, (Num3_p2 - 5 + 1), 1, k*k*dx*dx - 4, 1, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!! num 35 !!!
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2);
+		i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2 + Num3_p2 / 2); i++)// num 35(3) :  46 node! part1
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, i, -(Num5_p2 - N_d0 + 2 + Num4_p2) - 2, -(Num5_p2 - N_d0 + 2 + Num4_p2) - 1, -(Num5_p2 - N_d0 + 2 + Num4_p2),
+				0, 1, Num3_p2 + Num2_p2 + N_d0 - 2 - 2, Num3_p2 + Num2_p2 + N_d0 - 2 - 1, Num3_p2 + Num2_p2 + N_d0 - 2,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, i, -(Num5_p2 - N_d0 + 2 + Num4_p2), -2, -1, 0, 1, Num3_p2 + Num2_p2 + N_d0 - 2,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, i, -(Num4_p2 + 4), -1, 0, 1, (Num3_p2 + Num2_p2 + N_d0 - 2) - 1, (Num3_p2 + Num2_p2 + N_d0 - 2),
+				C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, i, -(Num4_p2 + 4), -1, 0, 1, Num3_p2 / 2 + 1 + Num2_p2 + Node_1_p2, Num3_p2 / 2 + 1 + Num2_p2 + Node_1_p2 + 1,
+			C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, i, -(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 / 2 - 1), -1, 0, 1, 2, Num3_p2 / 2 + 1 + Num2_p2 + Node_1_p2,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, i, -(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 / 2 - 1), -(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 / 2 - 1) + 1, -(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 / 2 - 1) + 2,
+			-1, 0, Num3_p2 / 2 + 1 + Num2_p2 + Node_1_p2, Num3_p2 / 2 + 1 + Num2_p2 + Node_1_p2 + 1, Num3_p2 / 2 + 1 + Num2_p2 + Node_1_p2 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2) < 3)// 2dx
+			{
+				inner_5node(j, i, 2, -(Num5_p2 - N_d0 + 2 + Num4_p2), Num3_p2 + Num2_p2 + N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2) > 4) && ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2) < (Num3_p2 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num4_p2 + 4), Num3_p2 - 5, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, i, 2, -(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 / 2 - 1), Num3_p2 / 2 + 1 + Num2_p2 + Node_1_p2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2 + Num3_p2 / 2);
+		i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2 + Num3_p2); i++)// num 35(3) :  46 node! part2
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 / 2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, i, -(Num5_p2 - Node_5_p2 - N_a + 3 + Num4_p2 + Num3_p2 / 2) - 2, -(Num5_p2 - Node_5_p2 - N_a + 3 + Num4_p2 + Num3_p2 / 2) - 1,
+				-(Num5_p2 - Node_5_p2 - N_a + 3 + Num4_p2 + Num3_p2 / 2), 0, 1,
+				Num3_p2 / 2 + Num2_p2 + Node_1_p2 + N_a - 3 - 2, Num3_p2 / 2 + Num2_p2 + Node_1_p2 + N_a - 3 - 1, Num3_p2 / 2 + Num2_p2 + Node_1_p2 + N_a - 3,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, i, -(Num5_p2 - Node_5_p2 - N_a + 3 + Num4_p2 + Num3_p2 / 2), -2, -1, 0, 1, Num3_p2 / 2 + Num2_p2 + Node_1_p2 + N_a - 3,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, i, -(Num3_p2 - 5 + 1), -1, 0, 1, (Num3_p2 / 2 + Num2_p2 + Node_1_p2 + N_a - 3) - 1, (Num3_p2 / 2 + Num2_p2 + Node_1_p2 + N_a - 3),
+				C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, i, -(Num3_p2 - 5 + 1), -1, 0, 1, 1 + Num2_p2 + Node_11_p2, 1 + Num2_p2 + Node_11_p2 + 1,
+			C2_2, C3_2, C1_2, C3_2, C4, C4, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, i, -(Num5_p2 - Node_55_p2 + Num4_p2 + Num3_p2 - 1), -1, 0, 1, 2, 1 + Num2_p2 + Node_11_p2,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3_p2 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, i, -(Num5_p2 - Node_55_p2 + Num4_p2 + Num3_p2 - 1), -(Num5_p2 - Node_55_p2 + Num4_p2 + Num3_p2 - 1) + 1,
+			-(Num5_p2 - Node_55_p2 + Num4_p2 + Num3_p2 - 1) + 2, -1, 0, 1 + Num2_p2 + Node_11_p2, 1 + Num2_p2 + Node_11_p2 + 1, 1 + Num2_p2 + Node_11_p2 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 / 2) < 3)// 2dx
+			{
+				inner_5node(j, i, 2, -(Num5_p2 - Node_5_p2 - N_a + 3 + Num4_p2 + Num3_p2 / 2), Num3_p2 / 2 + Num2_p2 + Node_1_p2 + N_a - 3, Coef, Coef_location);
+			}
+			else if (((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 / 2) > 4) && ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 / 2) < (Num3_p2 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, i, 1, -(Num3_p2 - 5 + 1), 6 + Num2_p2 - 1, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, i, 2, -(Num5_p2 - Node_55_p2 + Num4_p2 + Num3_p2 - 1), 1 + Num2_p2 + Node_11_p2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!! num 36 !!!
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2 + Num3_p2);
+		i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2 + Num3_p2 + Num2_p2 / 2); i++)// num 36(2) :  26 node! part1
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, i, -(Num3_p2 - 3), -(Num3_p2 - 3) + 2, 0, 1, Num2_p2 + Node11_p2 - 1, Num2_p2 + Node11_p2,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2_p2 / 2 - 1) ://node2: 3 lei 2j xia
+			kind3_node(j, i, -(Num3_p2 - 5), -(Num3_p2 - 5) + 2, -1, 0, Num2_p2 / 2 + Node_1_p2 - 4 + 1, Num2_p2 / 2 + Node_1_p2 - 4 + 1 + 1,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) % 2 == 0)// 1dx
+			{
+				inner_5node(j, i, 1, -(Num3_p2 - 5),
+					(Num2_p2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) + Node11_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) / 2), Coef, Coef_location);
+			}
+			else//1 lei  2j left
+			{
+				kind1_node(j, i, -(Num3_p2 - 5), -1, 0, 1,
+					(Num2_p2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) + Node11_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) / 2),
+					(Num2_p2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) + Node11_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) / 2) + 1,
+					(Num2_p2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) + Node11_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) / 2) + (Num1_p2 - N_d0 + 2),
+					(Num2_p2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) + Node11_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2) / 2) + 1 + (Num1_p2 - N_d0 + 2),
+					A4_2, A3_2, A5_2, A3_2, A1_2, A1_2, A2_2, A2_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2 + Num3_p2 + Num2_p2 / 2);
+		i<(M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Num5_p2 + Num4_p2 + Num3_p2 + Num2_p2); i++)// num 36(2) :  26 node! part2
+	{
+		switch (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, i, -(6 + Num2_p2 - 1) - 2, -(6 + Num2_p2 - 1), 0, 1, Num2_p2 / 2 + Node13_p2 - 1, Num2_p2 / 2 + Node13_p2,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2_p2 / 2 - 1) :// 3 lei 2j xia
+			kind3_node(j, i, -(6 + Num2_p2 - 1), -(6 + Num2_p2 - 1) + 2, -1, 0, Node_11_p2 - 4 + 1, Node_11_p2 - 4 + 1 + 1,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) % 2 == 0)// 1dx
+			{
+				inner_5node(j, i, 1, -(6 + Num2_p2 - 1), Num2_p2 / 2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) + Node13_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) / 2,
+					Coef, Coef_location);
+			}
+			else//1 lei 2j left
+			{
+				kind1_node(j, i, -(6 + Num2_p2 - 1), -1, 0, 1,
+					(Num2_p2 / 2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) + Node13_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) / 2),
+					(Num2_p2 / 2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) + Node13_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) / 2) + 1,
+					(Num2_p2 / 2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) + Node13_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) / 2) + (Num1_p2 - Node_11_p2 + Nx_3 - 1),
+					(Num2_p2 / 2 - (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) + Node13_p2 + (i - M_post2_q3 - Num8_p2 - Num7_p2 - Num6_p2 - Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2 / 2) / 2) + 1 + (Num1_p2 - Node_11_p2 + Nx_3 - 1),
+					A4_2, A3_2, A5_2, A3_2, A1_2, A1_2, A2_2, A2_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!! num 37 !!!
+	for (i = (num_total - Nx_2 - Nx_3 - Num1_p2); i<(num_total - Nx_2 - Nx_3 - Num1_p2 + Node_1_p2 + 2); i++)// circle num 37(1) Nx_2:  74 node!  part1 !
+	{
+		switch (i - num_total + Nx_2 + Nx_3 + Num1_p2)
+		{
+		case 0:
+			boundary_node(j, i, 1, -Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, i, -Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2, -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1_p2 + 1) ://2 lei xia 1j
+			kind2_node(j, i, -(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2), -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - num_total + Nx_2 + Nx_3 + Num1_p2) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, i, 4, -Num5_p2 - Num4_p2 - Num3_p2 - Num2_p2, Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1_p2) > (N_d0 - 3)) && ((i - num_total + Nx_2 + Nx_3 + Num1_p2) < Node11_p2))// 2dx!
+			{
+				inner_5node(j, i, 2, -(Num3_p2 + Num2_p2 + N_d0 - 2), Num1_p2 - N_d0 + 2, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1_p2) >= Node11_p2) && ((i - num_total + Nx_2 + Nx_3 + Num1_p2) <= Node12_p2))// 2 lei right 2j !
+			{
+				kind2_node(j, i, -((i - num_total + Nx_2 + Nx_3 + Num1_p2) + Num2_p2 - (i - num_total + Nx_2 + Nx_3 + Num1_p2 - Node11_p2) * 2),
+					-1, 0, 1, Num1_p2 - N_d0 + 2, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, i, 2, -(Num3_p2 / 2 + 1 + Num2_p2 + Node_1_p2), Num1_p2 - N_d0 + 2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (num_total - Nx_2 - Nx_3 - Num1_p2 + Node_1_p2 + 2); i<(num_total - Nx_2 - Nx_3); i++)// circle num 37(1) Nx_2:  74 node!  part2 !
+	{
+		switch (i - num_total + Nx_2 + Nx_3 + Num1_p2)
+		{
+		case (Num1_p2 - 1) :
+			boundary_node(j, i, 2, -Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2, Nx_2 + Nx_3, Coef, Coef_location);
+			break;
+		case (Node_1_p2 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, i, -(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2), -2, -1, 0, 1, Nx_2 + Nx_3,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_11_p2 + 1) ://2 lei xia 1j
+			kind2_node(j, i, -Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2, -1, 0, 1, 2, Nx_2 + Nx_3,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - num_total + Nx_2 + Nx_3 + Num1_p2) < (Node_1_p2 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, i, 4, -(Num5_p2 - Node_5_p2 + Num4_p2 + Num3_p2 + Num2_p2 + Node_1_p2), Nx_2 + Nx_3, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1_p2) > (Node_1_p2 + N_a - 4)) && ((i - num_total + Nx_2 + Nx_3 + Num1_p2) < Node13_p2))// 2dx!
+			{
+				inner_5node(j, i, 2, -(Num3_p2 / 2 + Num2_p2 + Node_1_p2 + N_a - 3), Num1_p2 - Node_11_p2 + Nx_3 - 1, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1_p2) >= Node13_p2) && ((i - num_total + Nx_2 + Nx_3 + Num1_p2) <= Node14_p2))// 2 lei left 2j !
+			{
+				kind2_node(j, i, -((i - num_total + Nx_2 + Nx_3 + Num1_p2) + Num2_p2 / 2 - (i - num_total + Nx_2 + Nx_3 + Num1_p2 - Node13_p2) * 2),
+					-1, 0, 1, Num1_p2 - Node_11_p2 + Nx_3 - 1, Nx_2 + Nx_3, B2, B3, B1_2, B3, B4, B5, Coef, Coef_location);
+			}
+			else if (((i - num_total + Nx_2 + Nx_3 + Num1_p2) >= Node14_p2) && ((i - num_total + Nx_2 + Nx_3 + Num1_p2) <= Node_11_p2))// 2dx
+			{
+				inner_5node(j, i, 2, -(Num2_p2 + Node_11_p2 + 1), Num1_p2 - Node_11_p2 + Nx_3 - 1, Coef, Coef_location);
+			}
+			else
+			{
+				inner_5node(j, i, 4, -Num1_p2 - Num2_p2 - Num3_p2 - Num4_p2, Nx_2 + Nx_3, Coef, Coef_location);// 4dx!
+			}
+			break;
+		}
+		j = j + 1;
+	}
+
+	//====================================================================================================
+	//调用封装函数
+	//left 1 --- right 1
+	scan_coef_Matrix_middle_wrapper(j, Coef, Coef_location, num_total, sizeN - 2 * Num1, offset);
+	//=======================================================================================================================
+	//***************************************************************************************
+	//cout << "circle num1:" << j << endl;
+	for (i = (Nx_2 + Nx_3); i<(Nx_2 + Nx_3 + Node_1 + 2); i++)// circle num1 Nx_2:  74 node!  part1 !
+	{
+		switch (i - Nx_2 - Nx_3)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Nx_2 - Nx_3, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 + Num2 + Num3 + Num4,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_1 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 + Num2 + Num3 + Num4, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3) < Node11))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - N_d0 + 2 + Num2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node11) && ((i - Nx_2 - Nx_3) <= Node12))// 2 lei left 2j !
+			{
+				kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Nx_3 + N_d0 - 2), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + ((i - Nx_2 - Nx_3) - Node11) * 2,
+					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Nx_3 + N_d0 - 2), Num1 - Node_1 + Num2 + Num3 / 2 - 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Node_1 + 2); i<(Nx_2 + Nx_3 + Num1); i++)// circle num1 Nx_2:  74 node!  part2 !
+	{
+		switch (i - Nx_2 - Nx_3)
+		{
+		case (Num1 - 1) :
+			boundary_node(j, j - offset, 2, -Nx_2 - Nx_3, Num5 + Num2 + Num3 + Num4, Coef, Coef_location);
+			break;
+		case (Node_1 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Nx_2 - Nx_3, -2, -1, 0, 1, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_11 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Nx_2 + Nx_3), -1, 0, 1, 2, Num5 + Num2 + Num3 + Num4,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3) < (Node_1 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Nx_3 - Nx_2, Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) > (Node_1 + N_a - 4)) && ((i - Nx_2 - Nx_3) < Node13))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node13) && ((i - Nx_2 - Nx_3) <= Node14))// 2 lei left 2j !
+			{
+				kind2_node(j, j - offset, -Nx_3 - Nx_2, -(Node_11 + 1), -1, 0, 1, Num1 - (i - Nx_2 - Nx_3) + Num2 / 2 + ((i - Nx_2 - Nx_3) - Node13) * 2,
+					B5, B4, B3, B1_2, B3, B2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3) >= Node14) && ((i - Nx_2 - Nx_3) <= Node_11))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Node_11 + 1), Num1 - Node_11 + Num2 + Num3 - 1, Coef, Coef_location);
+			}
+			else
+			{
+				inner_5node(j, j - offset, 4, -(Nx_3 + Nx_2), Num5 + Num2 + Num3 + Num4, Coef, Coef_location);// 4dx!
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!!!!!!!!!
+	//cout << "circle num 2:" << j << endl;
+	for (i = (Nx_2 + Nx_3 + Num1); i<(Nx_2 + Nx_3 + Num1 + Num2 / 2); i++)// num 2 :  26 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num1 - Node11) - 1, -(Num1 - Node11), 0, 1, Num2 + 5 - 2, Num2 + 5,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2 / 2 - 1) ://node2: 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num1 - Node12 + Num2 / 2 - 1), -(Num1 - Node12 + Num2 / 2 - 1) + 1, -1, 0, Num2 + 5, Num2 + 5 + 2,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1) % 2 == 0)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2), Num2 + 5, Coef, Coef_location);
+			}
+			else//1 lei  2j left
+			{
+				kind1_node(j, j - offset, -((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2) - (Nx_3 + N_d0 - 2),
+					-((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2) - (Nx_3 + N_d0 - 2) + 1,
+					-((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2),
+					-((i - Nx_2 - Nx_3 - Num1) + Num1 - Node11 - (i - Nx_2 - Nx_3 - Num1) / 2) + 1,
+					-1, 0, 1, 5 + Num2, A2_2, A2_2, A1_2, A1_2, A3_2, A5_2, A3_2, A4_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 / 2); i<(Nx_2 + Nx_3 + Num1 + Num2); i++)// num 2 :  26 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 / 2)
+		{
+		case 0:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num1 - Node13 + Num2 / 2) - 1, -(Num1 - Node13 + Num2 / 2), 0, 1, Num3 - 5 - 2, Num3 - 5,
+				C4, C3_2, C1_2, C2_2, C4, C3_2, Coef, Coef_location);
+			break;
+		case (Num2 / 2 - 1) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num1 - Node14 + Num2 - 1), -(Num1 - Node14 + Num2 - 1) + 1, -1, 0, Num3 - 5, Num3 - 5 + 2,
+			C3_2, C4, C2_2, C1_2, C3_2, C4, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) % 2 == 0)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2,
+					Num3 - 5, Coef, Coef_location);
+			}
+			else//1 lei 2j left
+			{
+				kind1_node(j, j - offset, -((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2 - (Node_11 + 1),
+					-((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2 - (Node_11 + 1) + 1,
+					-((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2,
+					-((i - Nx_2 - Nx_3 - Num1 - Num2 / 2) + Num1 - Node13 - (i - Nx_2 - Nx_3 - Num1 - Num2 / 2) / 2) - Num2 / 2 + 1,
+					-1, 0, 1, Num3 - 5, A2_2, A2_2, A1_2, A1_2, A3_2, A5_2, A3_2, A4_2, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************!!!!
+	//cout << "circle num 3:" << j << endl;
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 / 2); i++)// num 3 :  46 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, j - offset, -(Num1 - N_d0 + 2 + Num2) - 2, -(Num1 - N_d0 + 2 + Num2) - 1, -(Num1 - N_d0 + 2 + Num2), 0, 1, Num3 + Num4 + N_d0 - 2 - 2,
+				Num3 + Num4 + N_d0 - 2 - 1, Num3 + Num4 + N_d0 - 2, A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num1 - N_d0 + 2 + Num2), -2, -1, 0, 1, Num3 + Num4 + N_d0 - 2,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num1 - N_d0 + 2 + Num2) - 1, -(Num1 - N_d0 + 2 + Num2), -1, 0, 1, Num3 - 4,
+				C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), -(Num1 - Node_1 + Num2 + Num3 / 2 - 1) + 1, -1, 0, 1, Num3 - 4,
+			C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), -1, 0, 1, 2, Num3 / 2 + 1 + Num4 + Node_5,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), -(Num1 - Node_1 + Num2 + Num3 / 2 - 1) + 1, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1) + 2, -1, 0,
+			Num3 / 2 + 1 + Num4 + Node_5, Num3 / 2 + 1 + Num4 + Node_5 + 1, Num3 / 2 + 1 + Num4 + Node_5 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2) < 3)// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num1 - N_d0 + 2 + Num2), Num3 + Num4 + N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2) < (Num3 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num2 + 5), Num3 - 4, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num1 - Node_1 + Num2 + Num3 / 2 - 1), Num3 / 2 + 1 + Num4 + Node_5, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 / 2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3); i++)// num 3 :  46 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2)
+		{
+		case 0:// 1 lei 1j shang
+			kind1_node(j, j - offset, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2) - 2, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2) - 1, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), 0, 1,
+				Num3 / 2 + Num4 + Node_5 + N_a - 3 - 2, Num3 / 2 + Num4 + Node_5 + N_a - 3 - 1, Num3 / 2 + Num4 + Node_5 + N_a - 3,
+				A2_1, A1_1, A3_1, A5_1, A4_1, A2_1, A1_1, A3_1, Coef, Coef_location);
+			break;
+		case 3:// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), -2, -1, 0, 1, Num3 / 2 + Num4 + Node_5 + N_a - 3,
+				B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case 4:// 3 lei 2j shang
+			kind3_node(j, j - offset, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2) - 1, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), -1, 0, 1, 5 + Num4 - 1,
+				C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 5) :// 3 lei 2j xia
+			kind3_node(j, j - offset, -(Num1 - Node_11 + Num2 + Num3 - 1), -(Num1 - Node_11 + Num2 + Num3 - 1) + 1, -1, 0, 1, 5 + Num4 - 1,
+			C4, C4, C3_2, C1_2, C3_2, C2_2, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 4) :// 2 lei 2j xia
+			kind2_node(j, j - offset, -(Num1 - Node_11 + Num2 + Num3 - 1), -1, 0, 1, 2, 1 + Num4 + Node_55,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Num3 / 2 - 1) :// 1 lei 1j xia
+			kind1_node(j, j - offset, -(Num1 - Node_11 + Num2 + Num3 - 1), -(Num1 - Node_11 + Num2 + Num3 - 1) + 1, -(Num1 - Node_11 + Num2 + Num3 - 1) + 2, -1, 0,
+			1 + Num4 + Node_55, 1 + Num4 + Node_55 + 1, 1 + Num4 + Node_55 + 2,
+			A3_1, A1_1, A2_1, A4_1, A5_1, A3_1, A1_1, A2_1, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2) < 3)// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num1 - Node_1 - N_a + 3 + Num2 + Num3 / 2), Num3 / 2 + Num4 + Node_5 + N_a - 3, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2) > 4) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 / 2) < (Num3 / 2 - 5)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 5), 5 + Num4 - 1, Coef, Coef_location);
+			}
+			else// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num1 - Node_11 + Num2 + Num3 - 1), 1 + Num4 + Node_55, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	//cout << "circle num 4:" << j << endl;
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 / 2); i++)// num 4 :  30 node! part1
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3)
+		{
+		case 0:// 1 lei 2j shang
+			kind1_node(j, j - offset, -(Num3 - 4) - 2, -(Num3 - 4) - 1, -(Num3 - 4), 0, 1, Num4 + N_d0 + 2 - 2, Num4 + N_d0 + 2 - 1, Num4 + N_d0 + 2,
+				A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4 / 2 - 1) :// 1 lei 2j xia
+			kind1_node(j, j - offset, -(Num3 - 4), -(Num3 - 4) + 1, -(Num3 - 4) + 2, -1, 0,
+			Num4 + N_d0 + 2 - N_c1, Num4 + N_d0 + 2 - N_c1 + 1, Num4 + N_d0 + 2 - N_c1 + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) <= Node41)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 4), Num4 + N_d0 + 2, Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) >= Node42) // 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num3 - 4), Num4 + N_d0 + 2 - N_c1, Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, j - offset, -(Num3 - 4), -1, 0, 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 / 2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4); i++)// num 4 :  30 node! part2
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3)
+		{
+		case (Num4 / 2) :// 1 lei 2j shang
+			kind1_node(j, j - offset, -(5 + Num4 - 1) - 2, -(5 + Num4 - 1) - 1, -(5 + Num4 - 1), 0, 1,
+			(Node_55 - 4 + 1 + N_c1) - 2, (Node_55 - 4 + 1 + N_c1) - 1, (Node_55 - 4 + 1 + N_c1),
+			A2_2, A1_2, A3_2, A5_2, A4_2, A2_2, A1_2, A3_2, Coef, Coef_location);
+			break;
+		case (Num4 - 1) :// 1 lei 2j xia
+			kind1_node(j, j - offset, -(5 + Num4 - 1), -(5 + Num4 - 1) + 1, -(5 + Num4 - 1) + 2, -1, 0,
+			(Node_55 - 4 + 1), (Node_55 - 4 + 1) + 1, (Node_55 - 4 + 1) + 2,
+			A3_2, A1_2, A2_2, A4_2, A5_2, A3_2, A1_2, A2_2, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) <= Node43)// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(5 + Num4 - 1), (Node_55 - 4 + 1 + N_c1), Coef, Coef_location);
+			}
+			else if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3) >= Node44) // 1dx
+			{
+				inner_5node(j, j - offset, 1, -(5 + Num4 - 1), (Node_55 - 4 + 1), Coef, Coef_location);
+			}
+			else// 1dx 4_node
+			{
+				inner_4node(j, j - offset, -(5 + Num4 - 1), -1, 0, 1, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//******************************************************************************************
+	//cout << "circle num5:" << j << endl;
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Node_5 + 2); i++)// circle num5 :  80 node!  part1 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4)
+		{
+		case 0:
+			boundary_node(j, j - offset, 1, -Num1 - Num2 - Num3 - Num4, Num5 + Num6 + Num7 + Num8, Coef, Coef_location);
+			break;
+		case (N_d0 - 3) ://2 lei shang 1j
+			kind2_node(j, j - offset, -Num1 - Num2 - Num3 - Num4, -2, -1, 0, 1, Num5 + Num6 + Num7 + Num8,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (N_d0 + 1) :// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num3 + Num4 + N_d0 - 2), -2, -1, 0, 1, Num5 - N_d0 + 2 + Num6,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node51:// inner 3 node
+			inner_3node(j, j - offset, -(Num4 + N_d0 + 2), -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
+			break;
+		case (Node51 + 1) :// inner 3 node
+			inner_3node(j, j - offset, -(Num4 + N_d0 + 2) + N_c1, 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node_5 - 3) ://2 lei xia 2j
+			kind2_node(j, j - offset, -(Num3 / 2 + 1 + Num4 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num6 + Num7 / 2 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_5 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5), -1, 0, 1, 2, Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (N_d0 - 3))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num1 - Num2 - Num3 - Num4, Num5 + Num6 + Num7 + Num8, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (N_d0 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (N_d0 + 1)))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 + Num4 + N_d0 - 2), Num5 - N_d0 + 2 + Num6, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (N_d0 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < Node51))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num4 + N_d0 + 2), Num5 - N_d0 - 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node51 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_5 - 3)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Num4 + N_d0 + 2) + N_c1, Num5 - N_d0 - 2 - 2, Coef, Coef_location);
+			}
+			else// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + 1 + Num4 + Node_5), Num5 - Node_5 + Num6 + Num7 / 2 - 1, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Node_5 + 2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Num5); i++)// circle num5 :  80 node!  part2 !
+	{
+		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4)
+		{
+		case (Num5 - 1) :
+			boundary_node(j, j - offset, 2, -Num2 - Num3 - Num4 - Num5, Num6 + Num7 + Num8 + Num9, Coef, Coef_location);
+			break;
+		case (Node_5 + N_a - 4) ://2 lei shang 1j
+			kind2_node(j, j - offset, -(Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5), -2, -1, 0, 1, Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9,
+			B3, B5, B4, B1_1, B2, B3, Coef, Coef_location);
+			break;
+		case (Node_5 + N_a) :// 2 lei 2j shang
+			kind2_node(j, j - offset, -(Num3 / 2 + Num4 + Node_5 + N_a - 3), -2, -1, 0, 1, Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2,
+			B3, B5, B4, B1_2, B2, B3, Coef, Coef_location);
+			break;
+		case Node52:// inner 3 node
+			inner_3node(j, j - offset, -(Node_55 - 4 + 1) - N_c1, -1, 0, 1, 1, k*k*dx*dx - 4, Coef, Coef_location);
+			break;
+		case (Node52 + 1) :// inner 3 node
+			inner_3node(j, j - offset, -(Node_55 - 4 + 1), 0, 1, 1, k*k*dx*dx - 4, 1, Coef, Coef_location);
+			break;
+		case (Node_55 - 3) ://2 lei xia 2j
+			kind2_node(j, j - offset, -(Num4 + Node_55 + 1), -1, 0, 1, 2, Num5 - Node_55 + Num6 + Num7 - 1,
+			B3, B2, B1_2, B4, B5, B3, Coef, Coef_location);
+			break;
+		case (Node_55 + 1) ://2 lei xia 1j
+			kind2_node(j, j - offset, -Num2 - Num3 - Num4 - Num5, -1, 0, 1, 2, Num6 + Num7 + Num8 + Num9,
+			B3, B2, B1_1, B4, B5, B3, Coef, Coef_location);
+			break;
+		default:
+			if ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_5 + N_a - 4))// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -(Num1 - Node_1 + Num2 + Num3 + Num4 + Node_5), Num5 - Node_5 + Num6 + Num7 + Num8 + Node_9, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node_5 + N_a - 4)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_5 + N_a)))// 2dx!
+			{
+				inner_5node(j, j - offset, 2, -(Num3 / 2 + Num4 + Node_5 + N_a - 3), Num5 - Node_5 - N_a + 3 + Num6 + Num7 / 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node_5 + N_a)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < Node52))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Node_55 - 4 + 1) - N_c1, (Num5 - Node_55 + 4 + Num6 - 1) + 2, Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node52 + 1)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_55 - 3)))// 1dx
+			{
+				inner_5node(j, j - offset, 1, -(Node_55 - 4 + 1), (Num5 - Node_55 + 4 + Num6 - 1), Coef, Coef_location);
+			}
+			else if (((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) > (Node_55 - 3)) && ((i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4) < (Node_55 + 1)))// 2dx
+			{
+				inner_5node(j, j - offset, 2, -(Num4 + Node_55 + 1), Num5 - Node_55 + Num6 + Num7 - 1, Coef, Coef_location);
+			}
+			else// 4dx!
+			{
+				inner_5node(j, j - offset, 4, -Num2 - Num3 - Num4 - Num5, Num6 + Num7 + Num8 + Num9, Coef, Coef_location);
+			}
+			break;
+		}
+		j = j + 1;
+	}
+	//**************************************************************
+	cout << "middle_7区域节点数:" << j << endl;
+	if (j == sizeM)
+		cout << "middle_5 passed..." << endl;
+	else
+		cout << "middle_5 failed..." << endl;
+	//修正矩阵，将不在本区域的节点刨除
+	for (int i = 0; i != sizeM; i++)
+		for (int j = 0; j != N_matrix; j++){
+		if (Coef_location[i][j] < 0 || Coef_location[i][j] >= sizeN)
+			Coef_location[i][j] = -1;
+		}
+	if (Debug)
+	{
+		ofstream outFile_Coef("middle_5.txt");
+		if (!outFile_Coef)
+		{
+			cout << "Can't write the coefficient matrix into file !" << endl;
+			exit(1);//Terminate with fault
+		}
+		else
+		{
+			int i, j;
+			for (i = 0; i < sizeM; i++)
+			{
+				for (j = 0; j < N_matrix; j++)
+				{
+					if ((Coef[i][j].real != 0 || Coef[i][j].image != 0) && Coef_location[i][j] >= 0)
+						outFile_Coef << Coef[i][j].real << "+j*" << Coef[i][j].image << " (" << i << "," << Coef_location[i][j] << ") ";
+				}
+				outFile_Coef << endl << endl;
+			}
+		}
+		outFile_Coef.close();
+	}
+
+};
+
+
 
 
 //*********************************************************************************//
@@ -14493,7 +16507,7 @@ void scan_coef_Matrix_post2(complex** Coef, int num_total, int ** Coef_location,
 	}
 	//***************************************************************************************
 	//最后一行 本节点向下的区域没有影响
-	cout << "circle num1:" << j << endl;
+	//cout << "circle num1:" << j << endl;
 	for (i = (Nx_2 + Nx_3); i<(Nx_2 + Nx_3 + Node_1 + 2); i++)// circle num1 Nx_2:  74 node!  part1 !
 	{
 		switch (i - Nx_2 - Nx_3)
@@ -14573,7 +16587,7 @@ void scan_coef_Matrix_post2(complex** Coef, int num_total, int ** Coef_location,
 		j = j + 1;
 	}
 	//******************************************************************************************!!!!!!!!!!
-	cout << "circle num 2:" << j << endl;
+	//cout << "circle num 2:" << j << endl;
 	for (i = (Nx_2 + Nx_3 + Num1); i<(Nx_2 + Nx_3 + Num1 + Num2 / 2); i++)// num 2 :  26 node! part1
 	{
 		switch (i - Nx_2 - Nx_3 - Num1)
@@ -14634,7 +16648,7 @@ void scan_coef_Matrix_post2(complex** Coef, int num_total, int ** Coef_location,
 		j = j + 1;
 	}
 	//******************************************************************************************!!!!
-	cout << "circle num 3:" << j << endl;
+	//cout << "circle num 3:" << j << endl;
 	for (i = (Nx_2 + Nx_3 + Num1 + Num2); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 / 2); i++)// num 3 :  46 node! part1
 	{
 		switch (i - Nx_2 - Nx_3 - Num1 - Num2)
@@ -14729,7 +16743,7 @@ void scan_coef_Matrix_post2(complex** Coef, int num_total, int ** Coef_location,
 		j = j + 1;
 	}
 	//******************************************************************************************
-	cout << "circle num 4:" << j << endl;
+	//cout << "circle num 4:" << j << endl;
 	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 / 2); i++)// num 4 :  30 node! part1
 	{
 		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3)
@@ -14792,7 +16806,7 @@ void scan_coef_Matrix_post2(complex** Coef, int num_total, int ** Coef_location,
 		j = j + 1;
 	}
 	//******************************************************************************************
-	cout << "circle num5:" << j << endl;
+	//cout << "circle num5:" << j << endl;
 	for (i = (Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4); i<(Nx_2 + Nx_3 + Num1 + Num2 + Num3 + Num4 + Node_5 + 2); i++)// circle num5 :  80 node!  part1 !
 	{
 		switch (i - Nx_2 - Nx_3 - Num1 - Num2 - Num3 - Num4)
@@ -15369,8 +17383,9 @@ void main()// DDM-10 region
 	cout << "SIW filter 模型计算：" << endl;
 
 	const int overlapping_nodes = 2 * Num2 + Num3;		//重叠区域
+	const int extra_nodes0 = Nx_side + Nx_1;
 	const int extra_nodes1 = Num2 + Num3 + Num4 + Num5;	//有影响的节点数
-	const int extra_nodes2 = extra_nodes1 + Num6 + Num7;	//有影响的节点数（包含大孔的复杂区域）
+	const int extra_nodes2 = extra_nodes1 + Num6 + Num7_p2;	//有影响的节点数（包含大孔的复杂区域）
 
 	int N = N_matrix;	//压缩矩阵维数
 	int M = (M_end - overlapping_nodes) + (M_middle - overlapping_nodes)* M_middle + (M_post1 - overlapping_nodes)*N_post1
@@ -15381,6 +17396,14 @@ void main()// DDM-10 region
 	int N0 = M_end;
 	int M1 = M_middle + 2 * extra_nodes1;
 	int N1 = M_middle;
+	int M1_1 = M_middle + extra_nodes0 + extra_nodes1;
+	int N1_1 = M_middle;
+	int M1_5 = M_middle + extra_nodes1 + extra_nodes2;
+	int N1_5 = M_middle;
+	int M1_7 = M1_5;
+	int N1_7 = N1_5;
+	int M1_11 = M_middle + extra_nodes0 + extra_nodes1;
+	int N1_11 = M_middle;
 	int M1_post1 = M_post1 + 2 * extra_nodes1;
 	int N1_post1 = M_post1;
 	int M1_post2 = M_post2 + 2 * extra_nodes1;
@@ -15450,6 +17473,66 @@ void main()// DDM-10 region
 		b1[i][j] = -1;
 		}
 
+	complex **A1_1 = new complex*[M1_1];
+	for (int i = 0; i != M1_1; i++)
+		A1_1[i] = new complex[N];
+	int** b1_1 = new int*[M1_1];
+	for (int i = 0; i != M1_1; i++)
+	{
+		b1_1[i] = new int[N];
+	}
+	for (int i = 0; i != M1_1; i++)
+		for (int j = 0; j != N; j++)
+		{
+		A1_1[i][j] = zero;
+		b1_1[i][j] = -1;
+		}
+
+	complex **A1_5 = new complex*[M1_5];
+	for (int i = 0; i != M1_5; i++)
+		A1_5[i] = new complex[N];
+	int** b1_5 = new int*[M1_5];
+	for (int i = 0; i != M1_5; i++)
+	{
+		b1_5[i] = new int[N];
+	}
+	for (int i = 0; i != M1_5; i++)
+		for (int j = 0; j != N; j++)
+		{
+		A1_5[i][j] = zero;
+		b1_5[i][j] = -1;
+		}
+
+	complex **A1_7 = new complex*[M1_7];
+	for (int i = 0; i != M1_7; i++)
+		A1_7[i] = new complex[N];
+	int** b1_7 = new int*[M1_7];
+	for (int i = 0; i != M1_7; i++)
+	{
+		b1_7[i] = new int[N];
+	}
+	for (int i = 0; i != M1_7; i++)
+		for (int j = 0; j != N; j++)
+		{
+		A1_7[i][j] = zero;
+		b1_7[i][j] = -1;
+		}
+
+	complex **A1_11 = new complex*[M1_11];
+	for (int i = 0; i != M1_11; i++)
+		A1_11[i] = new complex[N];
+	int** b1_11 = new int*[M1_11];
+	for (int i = 0; i != M1_11; i++)
+	{
+		b1_11[i] = new int[N];
+	}
+	for (int i = 0; i != M1_11; i++)
+		for (int j = 0; j != N; j++)
+		{
+		A1_11[i][j] = zero;
+		b1_11[i][j] = -1;
+		}
+
 	complex **A1_post1 = new complex*[M1_post1];
 	for (int i = 0; i != M1_post1; i++)
 		A1_post1[i] = new complex[N];
@@ -15497,17 +17580,17 @@ void main()// DDM-10 region
 
 	//获取系数矩阵 未完成！！！！！！！
 	scan_coef_Matrix_end1(A0, M_end, b0, M0, N0,0);										//end
+	scan_coef_Matrix_middle_1(A1_1, M_middle, b1_1, M1_1, N1_1, extra_nodes0);
 	scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1, extra_nodes1);
-	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
 	scan_coef_Matrix_post1(A1_post1, M_post1, b1_post1, M1_post1, N1_post1, extra_nodes1);			//post1
 	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
-	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
+	scan_coef_Matrix_middle_5(A1_5, M_middle, b1_5, M1_5, N1_5, extra_nodes1);
 	scan_coef_Matrix_post2(A1_post2, M_post2, b1_post2, M1_post2, N1_post2, extra_nodes1);			//post2
-	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
+	scan_coef_Matrix_middle_7(A1_7, M_middle, b1_7, M1_7, N1_7,extra_nodes2);
 	///scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
 	//scan_coef_Matrix_middle(A1_post1, M_post1, b1_post1, M1_post1, N1_post1);			//post1
 	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
-	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
+	scan_coef_Matrix_middle_11(A1_11, M_middle, b1_11, M1_11, N1_11, extra_nodes1);
 	scan_coef_Matrix_end2(A2, M_end, b2, M2, N2, extra_nodes1);										//end
 
 	complex* X0 = new complex[N0];
