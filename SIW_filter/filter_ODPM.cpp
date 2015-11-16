@@ -17451,12 +17451,7 @@ void main()// DDM-10 region
 	{
 		b0[i] = new int[N];
 	}
-	for (int i = 0; i != M0; i++)
-		for (int j = 0; j != N; j++)
-		{
-		A0[i][j] = zero;
-		b0[i][j] = -1;
-		}
+
 
 	complex **A1 = new complex*[M1];
 	for (int i = 0; i != M1; i++)
@@ -17466,12 +17461,7 @@ void main()// DDM-10 region
 	{
 		b1[i] = new int[N];
 	}
-	for (int i = 0; i != M1; i++)
-		for (int j = 0; j != N; j++)
-		{
-		A1[i][j] = zero;
-		b1[i][j] = -1;
-		}
+
 
 	complex **A1_1 = new complex*[M1_1];
 	for (int i = 0; i != M1_1; i++)
@@ -17481,12 +17471,7 @@ void main()// DDM-10 region
 	{
 		b1_1[i] = new int[N];
 	}
-	for (int i = 0; i != M1_1; i++)
-		for (int j = 0; j != N; j++)
-		{
-		A1_1[i][j] = zero;
-		b1_1[i][j] = -1;
-		}
+
 
 	complex **A1_5 = new complex*[M1_5];
 	for (int i = 0; i != M1_5; i++)
@@ -17496,12 +17481,7 @@ void main()// DDM-10 region
 	{
 		b1_5[i] = new int[N];
 	}
-	for (int i = 0; i != M1_5; i++)
-		for (int j = 0; j != N; j++)
-		{
-		A1_5[i][j] = zero;
-		b1_5[i][j] = -1;
-		}
+
 
 	complex **A1_7 = new complex*[M1_7];
 	for (int i = 0; i != M1_7; i++)
@@ -17511,12 +17491,6 @@ void main()// DDM-10 region
 	{
 		b1_7[i] = new int[N];
 	}
-	for (int i = 0; i != M1_7; i++)
-		for (int j = 0; j != N; j++)
-		{
-		A1_7[i][j] = zero;
-		b1_7[i][j] = -1;
-		}
 
 	complex **A1_11 = new complex*[M1_11];
 	for (int i = 0; i != M1_11; i++)
@@ -17526,12 +17500,7 @@ void main()// DDM-10 region
 	{
 		b1_11[i] = new int[N];
 	}
-	for (int i = 0; i != M1_11; i++)
-		for (int j = 0; j != N; j++)
-		{
-		A1_11[i][j] = zero;
-		b1_11[i][j] = -1;
-		}
+
 
 	complex **A1_post1 = new complex*[M1_post1];
 	for (int i = 0; i != M1_post1; i++)
@@ -17541,12 +17510,7 @@ void main()// DDM-10 region
 	{
 		b1_post1[i] = new int[N];
 	}
-	for (int i = 0; i != M1_post1; i++)
-		for (int j = 0; j != N; j++)
-		{
-		A1_post1[i][j] = zero;
-		b1_post1[i][j] = -1;
-		}
+	
 
 	complex **A1_post2 = new complex*[M1_post2];
 	for (int i = 0; i != M1_post2; i++)
@@ -17556,12 +17520,7 @@ void main()// DDM-10 region
 	{
 		b1_post2[i] = new int[N];
 	}
-	for (int i = 0; i != M1_post2; i++)
-		for (int j = 0; j != N; j++)
-		{
-		A1_post2[i][j] = zero;
-		b1_post2[i][j] = -1;
-		}
+	
 
 	complex **A2 = new complex*[M2];
 	for (int i = 0; i != M2; i++)
@@ -17571,12 +17530,7 @@ void main()// DDM-10 region
 	{
 		b2[i] = new int[N];
 	}
-	for (int i = 0; i != M2; i++)
-		for (int j = 0; j != N; j++)
-		{
-		A2[i][j] = zero;
-		b2[i][j] = -1;
-		}
+
 
 	//获取系数矩阵 未完成！！！！！！！
 	scan_coef_Matrix_end1(A0, M_end, b0, M0, N0,0);										//end
