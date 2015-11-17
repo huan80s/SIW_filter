@@ -17011,6 +17011,8 @@ void scan_binc(complex* b, int num_total)	//4dx!!!!
 		}
 	}
 }
+//更新B
+void getB(complex* right, complex**A, int **Coef_Location, complex *x, int sizeM, int sizeN, int startpos);
 
 
 void show_middle( int N_p, int N_q, double** Ey_who, complex** Ey_mid )
@@ -17358,7 +17360,18 @@ void show_post1( int N_p, int N_q, double** Ey_who, complex** Ey_mid )
 
 //导出场值
 void toEvalue(complex *x, int num_total);
-
+//投影过程的封装函数
+void projective_process(complex **A, int ** b, complex *B, complex *X, complex* Binc, complex* x, int startpos, int extra_nodes, double sinta, int M, int N){
+	for (int i = 0; i != M; i++)
+		B[i] = Binc[i + startpos];
+	cgmethod(A, b, B, X, M, N, N_matrix);
+	for (int i = 0; i != N; i++)
+	{
+		X[i] = X[i] * sinta;
+		x[i + startpos + extra_nodes] = x[i + startpos + extra_nodes] + X[i];
+	}
+	getB(Binc, A, b, X, M, N, startpos);
+}
 //导出坐标，绘图使用的xy坐标
 void get_xy_positon(){
 	//输出坐标信息
@@ -17373,9 +17386,6 @@ void get_xy_positon(){
 
 void main()// DDM-10 region
 {
-	
-
-
 	time_t begin;
 	begin = time(&begin);
     int i=0,j=0;
@@ -17419,10 +17429,10 @@ void main()// DDM-10 region
 	int zone_N2 = M_end - overlapping_nodes;
 
 	//计算的起始点
-	int *startpos[13];	
+	int startpos[13];	
 	startpos[0] = 0;																				//end
-	startpos[1] = startpos[0] + zone_N0 - extra_nodes1;												
-	startpos[2] = startpos[1] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;
+	startpos[1] = startpos[0] + zone_N0 - extra_nodes0;												
+	startpos[2] = startpos[1] + extra_nodes0 + zone_N1 + overlapping_nodes - extra_nodes1;
 	startpos[3] = startpos[2] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;			//post1
 	startpos[4] = startpos[3] + extra_nodes1 + zone_N1_post1 + overlapping_nodes - extra_nodes1;	
 	startpos[5] = startpos[4] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;
@@ -17452,7 +17462,6 @@ void main()// DDM-10 region
 		b0[i] = new int[N];
 	}
 
-
 	complex **A1 = new complex*[M1];
 	for (int i = 0; i != M1; i++)
 		A1[i] = new complex[N];
@@ -17461,7 +17470,6 @@ void main()// DDM-10 region
 	{
 		b1[i] = new int[N];
 	}
-
 
 	complex **A1_1 = new complex*[M1_1];
 	for (int i = 0; i != M1_1; i++)
@@ -17472,7 +17480,6 @@ void main()// DDM-10 region
 		b1_1[i] = new int[N];
 	}
 
-
 	complex **A1_5 = new complex*[M1_5];
 	for (int i = 0; i != M1_5; i++)
 		A1_5[i] = new complex[N];
@@ -17481,7 +17488,6 @@ void main()// DDM-10 region
 	{
 		b1_5[i] = new int[N];
 	}
-
 
 	complex **A1_7 = new complex*[M1_7];
 	for (int i = 0; i != M1_7; i++)
@@ -17501,7 +17507,6 @@ void main()// DDM-10 region
 		b1_11[i] = new int[N];
 	}
 
-
 	complex **A1_post1 = new complex*[M1_post1];
 	for (int i = 0; i != M1_post1; i++)
 		A1_post1[i] = new complex[N];
@@ -17511,7 +17516,6 @@ void main()// DDM-10 region
 		b1_post1[i] = new int[N];
 	}
 	
-
 	complex **A1_post2 = new complex*[M1_post2];
 	for (int i = 0; i != M1_post2; i++)
 		A1_post2[i] = new complex[N];
@@ -17521,7 +17525,6 @@ void main()// DDM-10 region
 		b1_post2[i] = new int[N];
 	}
 	
-
 	complex **A2 = new complex*[M2];
 	for (int i = 0; i != M2; i++)
 		A2[i] = new complex[N];
@@ -17530,7 +17533,6 @@ void main()// DDM-10 region
 	{
 		b2[i] = new int[N];
 	}
-
 
 	//获取系数矩阵 未完成！！！！！！！
 	scan_coef_Matrix_end1(A0, M_end, b0, M0, N0,0);										//end
@@ -17553,12 +17555,12 @@ void main()// DDM-10 region
 	complex* X1 = new complex[N1];
 	for (int i = 0; i != N1; i++)
 		X1[1] = zero;
-	complex* X1_post1 = new complex[N1_post1];
+	complex* X_middle_post1 = new complex[N1_post1];
 	for (int i = 0; i != N1; i++)
-		X1_post1[1] = zero;
-	complex* X1_post2 = new complex[N1_post2];
+		X_middle_post1[1] = zero;
+	complex* X_middle_post2 = new complex[N1_post2];
 	for (int i = 0; i != N1; i++)
-		X1_post2[1] = zero;
+		X_middle_post2[1] = zero;
 	complex* X2 = new complex[N2];
 	for (int i = 0; i != N2; i++)
 		X2[i] = zero;
@@ -17591,7 +17593,34 @@ void main()// DDM-10 region
 	//sinta1 = 1.0; 
 	cout << "收敛目标：" << eps << endl;
 	cout << "开始投影:" << endl;
+	//迭代过程 未完成！！！！！
+	while (bnorm > eps)
+	{
+		if (times == 0)
+			sinta = 1;
+		else
+			sinta = sinta1;
 
+		//调用投影函数
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//end
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//post1
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);	
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//post2
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//post1
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
+		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//end
+
+		bnorm = 0.0;
+		bnorm = VectorNorm(M, Binc);
+
+		cout << ++times << " cond:" << bnorm << endl;
+	}
 	
 
 //计算所用时间并输出
