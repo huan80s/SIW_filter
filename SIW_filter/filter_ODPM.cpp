@@ -7926,9 +7926,6 @@ void scan_coef_Matrix_middle_5(complex** Coef, int num_total, int ** Coef_locati
 
 };
 
-
-
-
 //*********************************************************************************//
 //post1小圆孔，长为两孔一缝隙：n代表重叠区域号，Ey[n][M]代表每次迭代所求的解
 //*********************************************************************************//
@@ -12293,7 +12290,6 @@ void scan_coef_Matrix_post1(complex** Coef, int num_total, int ** Coef_location,
 		outFile_Coef.close();
 	}
 };
-
 //*********************************************************************************//
 //post2大圆孔，长为两孔一缝隙：n代表重叠区域号，Ey[n][M]代表每次迭代所求的解
 //*********************************************************************************//
@@ -17014,82 +17010,6 @@ void scan_binc(complex* b, int num_total)	//4dx!!!!
 //更新B
 void getB(complex* right, complex**A, int **Coef_Location, complex *x, int sizeM, int sizeN, int startpos);
 
-
-void show_middle( int N_p, int N_q, double** Ey_who, complex** Ey_mid )
-{
-	int j=0,k=0;
-	int Nx_22=Nx_side+2*(N_w+1);
-	// line 1-2
-	for ( k=0; k<(N_slot+1); k++ )//left
-	{
-		for ( j=0; j<(N_d0-2); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+j].amplitude();//1
-		for ( j=(N_d0-2); j<=(N_d0+N_w+2); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+N_d0-1+(j-N_d0+2)*2].amplitude();//2
-		for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+Node_1+1+(j-N_d0-N_w-3)].amplitude();//3
-		for ( j=(N_d0+N_w+N_a-1); j<=(Nx_22-N_d0+1); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+Node_1+N_a-2+(j-N_d0-N_w-N_a+1)*2].amplitude();//4
-		for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+Node_11+1+(j-Nx_22+N_d0-2)].amplitude();//5
-	}
-	// line 3--Num 5
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+j].amplitude();//1
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][N_d0-2]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+N_d0-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][N_d0-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+N_d0+1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][N_d0]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+N_d0+5].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][N_d0+N_w]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+N_d0+8].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][N_d0+N_w+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node_5-3].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][N_d0+N_w+2]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node_5-1].amplitude();//2
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node_5+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][N_d0+N_w+N_a-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node_5+N_a-2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][N_d0+N_w+N_a]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node_5+N_a].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][N_d0+N_w+N_a+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node52-1].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][Nx_22-N_d0-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node52+2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][Nx_22-N_d0]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node_55-3].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][Nx_22-N_d0+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node_55-1].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+1][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Node_55+1+(j-Nx_22+N_d0-2)].amplitude();//5
-	
-	// line 4--Num 9
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+j].amplitude();//1
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][N_d0-2]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+N_d0-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][N_d0-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+N_d0+1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][N_d0+N_w+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+Node_9-3].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][N_d0+N_w+2]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+Node_9-1].amplitude();//2
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+Node_9+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][N_d0+N_w+N_a-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+Node_9+N_a-2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][N_d0+N_w+N_a]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+Node_9+N_a].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][Nx_22-N_d0]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+Node_99-3].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][Nx_22-N_d0+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+Node_99-1].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+2][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6+Num7+Num8+Node_99+1+(j-Nx_22+N_d0-2)].amplitude();//5
-	// line 5--Num 13
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+j].amplitude();//1
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][N_d0-2]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+N_d0-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][N_d0-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+N_d0+1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][N_d0]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+N_d0+5].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][N_d0+N_w]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+N_d0+8].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][N_d0+N_w+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node_5-3].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][N_d0+N_w+2]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node_5-1].amplitude();//2
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node_5+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][N_d0+N_w+N_a-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node_5+N_a-2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][N_d0+N_w+N_a]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node_5+N_a].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][N_d0+N_w+N_a+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node52-1].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][Nx_22-N_d0-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node52+2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][Nx_22-N_d0]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node_55-3].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][Nx_22-N_d0+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node_55-1].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+N_slot+3][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1+Num2+Num3+Num4+Num5+Num6*2+Num7*2+Num8*2+Num9+Node_55+1+(j-Nx_22+N_d0-2)].amplitude();//5
-	
-}
-
 //用s参数验证程序正确性
 //输入全部场值
 void get_s_parameter(complex **Ey_total2_end){
@@ -17155,6 +17075,81 @@ void get_s_parameter(complex **Ey_total2_end){
 	outfile3.close();
 }
 
+//全部场值图的辅助函数
+void show_middle(int N_p, int N_q, double** Ey_who, complex** Ey_mid)
+{
+	int j = 0, k = 0;
+	int Nx_22 = Nx_side + 2 * (N_w + 1);
+	// line 1-2
+	for (k = 0; k<(N_slot + 1); k++)//left
+	{
+		for (j = 0; j<(N_d0 - 2); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + j].amplitude();//1
+		for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + N_d0 - 1 + (j - N_d0 + 2) * 2].amplitude();//2
+		for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_1 + 1 + (j - N_d0 - N_w - 3)].amplitude();//3
+		for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_1 + N_a - 2 + (j - N_d0 - N_w - N_a + 1) * 2].amplitude();//4
+		for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_11 + 1 + (j - Nx_22 + N_d0 - 2)].amplitude();//5
+	}
+	// line 3--Num 5
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + j].amplitude();//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 - 1].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 + 1].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 + 5].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 + 8].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 - 3].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 - 1].amplitude();//2
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 + 1 + (j - N_d0 - N_w - 3)].amplitude();//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 + N_a - 2].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 + N_a].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node52 - 1].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][Nx_22 - N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node52 + 2].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_55 - 3].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_55 - 1].amplitude();//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_55 + 1 + (j - Nx_22 + N_d0 - 2)].amplitude();//5
+
+	// line 4--Num 9
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + j].amplitude();//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + N_d0 - 1].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + N_d0 + 1].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 - 3].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 - 1].amplitude();//2
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + 1 + (j - N_d0 - N_w - 3)].amplitude();//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + N_a - 2].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + N_a].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_99 - 3].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_99 - 1].amplitude();//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_99 + 1 + (j - Nx_22 + N_d0 - 2)].amplitude();//5
+	// line 5--Num 13
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + j].amplitude();//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 - 1].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 + 1].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 + 5].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 + 8].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 - 3].amplitude();//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 - 1].amplitude();//2
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + 1 + (j - N_d0 - N_w - 3)].amplitude();//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + N_a - 2].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + N_a].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node52 - 1].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][Nx_22 - N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node52 + 2].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_55 - 3].amplitude();//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_55 - 1].amplitude();//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_55 + 1 + (j - Nx_22 + N_d0 - 2)].amplitude();//5
+
+}
 void show_post1( int N_p, int N_q, double** Ey_who, complex** Ey_mid )
 {
 	int j=0,k=0;
@@ -17383,6 +17378,7 @@ void get_xy_positon(){
 		}
 	out_xy.close();
 }
+//输出场值图
 
 void main()// DDM-10 region
 {
@@ -17398,7 +17394,7 @@ void main()// DDM-10 region
 	const int extra_nodes2 = extra_nodes1 + Num6 + Num7_p2;	//有影响的节点数（包含大孔的复杂区域）
 
 	int N = N_matrix;	//压缩矩阵维数
-	int M = (M_end - overlapping_nodes) + (M_middle - overlapping_nodes)* M_middle + (M_post1 - overlapping_nodes)*N_post1
+	int M = (M_end - overlapping_nodes) + (M_middle - overlapping_nodes)* N_middle + (M_post1 - overlapping_nodes)*N_post1
 		+ (M_post2 - overlapping_nodes)*N_post2 + M_end;	//节点总数
 
 	//各个包含重叠分区矩阵的维数
@@ -17443,6 +17439,8 @@ void main()// DDM-10 region
 	startpos[10] = startpos[9] + extra_nodes1 + zone_N1_post1 + overlapping_nodes - extra_nodes1;
 	startpos[11] = startpos[10] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;
 	startpos[12] = startpos[11] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;		//end
+	for (int i = 0; i != 13; i++)
+		cout << i << ":" << startpos[i] << endl;
 
 	complex zero(0, 0);
 	complex* Binc = new complex[M];
@@ -17453,140 +17451,152 @@ void main()// DDM-10 region
 	scan_binc(Binc, M);
 
 	//初试并设置分区矩阵参数 未考虑每个单独的区域！！！！
-	complex **A0 = new complex*[M0];
+	//A_* 表示系数，b_* 表示位置
+	complex **A_end0 = new complex*[M0];
 	for (int i = 0; i != M0; i++)
-		A0[i] = new complex[N];
-	int** b0 = new int*[M0];
+		A_end0[i] = new complex[N];
+	int** b_end0 = new int*[M0];
 	for (int i = 0; i != M0; i++)
 	{
-		b0[i] = new int[N];
+		b_end0[i] = new int[N];
 	}
 
-	complex **A1 = new complex*[M1];
+	complex **A_middle = new complex*[M1];
 	for (int i = 0; i != M1; i++)
-		A1[i] = new complex[N];
-	int** b1 = new int*[M1];
+		A_middle[i] = new complex[N];
+	int** b_middle = new int*[M1];
 	for (int i = 0; i != M1; i++)
 	{
-		b1[i] = new int[N];
+		b_middle[i] = new int[N];
 	}
 
-	complex **A1_1 = new complex*[M1_1];
+	complex **A_middle_1 = new complex*[M1_1];
 	for (int i = 0; i != M1_1; i++)
-		A1_1[i] = new complex[N];
-	int** b1_1 = new int*[M1_1];
+		A_middle_1[i] = new complex[N];
+	int** b_middle_1 = new int*[M1_1];
 	for (int i = 0; i != M1_1; i++)
 	{
-		b1_1[i] = new int[N];
+		b_middle_1[i] = new int[N];
 	}
 
-	complex **A1_5 = new complex*[M1_5];
+	complex **A_middle_5 = new complex*[M1_5];
 	for (int i = 0; i != M1_5; i++)
-		A1_5[i] = new complex[N];
-	int** b1_5 = new int*[M1_5];
+		A_middle_5[i] = new complex[N];
+	int** b_middle_5 = new int*[M1_5];
 	for (int i = 0; i != M1_5; i++)
 	{
-		b1_5[i] = new int[N];
+		b_middle_5[i] = new int[N];
 	}
 
-	complex **A1_7 = new complex*[M1_7];
+	complex **A_middle_7 = new complex*[M1_7];
 	for (int i = 0; i != M1_7; i++)
-		A1_7[i] = new complex[N];
-	int** b1_7 = new int*[M1_7];
+		A_middle_7[i] = new complex[N];
+	int** b_middle_7 = new int*[M1_7];
 	for (int i = 0; i != M1_7; i++)
 	{
-		b1_7[i] = new int[N];
+		b_middle_7[i] = new int[N];
 	}
 
-	complex **A1_11 = new complex*[M1_11];
+	complex **A_middle_11 = new complex*[M1_11];
 	for (int i = 0; i != M1_11; i++)
-		A1_11[i] = new complex[N];
-	int** b1_11 = new int*[M1_11];
+		A_middle_11[i] = new complex[N];
+	int** b_middle_11 = new int*[M1_11];
 	for (int i = 0; i != M1_11; i++)
 	{
-		b1_11[i] = new int[N];
+		b_middle_11[i] = new int[N];
 	}
 
-	complex **A1_post1 = new complex*[M1_post1];
+	complex **A_middle_post1 = new complex*[M1_post1];
 	for (int i = 0; i != M1_post1; i++)
-		A1_post1[i] = new complex[N];
-	int** b1_post1 = new int*[M1_post1];
+		A_middle_post1[i] = new complex[N];
+	int** b_middle_post1 = new int*[M1_post1];
 	for (int i = 0; i != M1_post1; i++)
 	{
-		b1_post1[i] = new int[N];
+		b_middle_post1[i] = new int[N];
 	}
 	
-	complex **A1_post2 = new complex*[M1_post2];
+	complex **A_middle_post2 = new complex*[M1_post2];
 	for (int i = 0; i != M1_post2; i++)
-		A1_post2[i] = new complex[N];
-	int** b1_post2 = new int*[M1_post2];
+		A_middle_post2[i] = new complex[N];
+	int** b_middle_post2 = new int*[M1_post2];
 	for (int i = 0; i != M1_post2; i++)
 	{
-		b1_post2[i] = new int[N];
+		b_middle_post2[i] = new int[N];
 	}
 	
-	complex **A2 = new complex*[M2];
+	complex **A_end1 = new complex*[M2];
 	for (int i = 0; i != M2; i++)
-		A2[i] = new complex[N];
-	int** b2 = new int*[M2];
+		A_end1[i] = new complex[N];
+	int** b_end1 = new int*[M2];
 	for (int i = 0; i != M2; i++)
 	{
-		b2[i] = new int[N];
+		b_end1[i] = new int[N];
 	}
 
 	//获取系数矩阵 未完成！！！！！！！
-	scan_coef_Matrix_end1(A0, M_end, b0, M0, N0,0);										//end
-	scan_coef_Matrix_middle_1(A1_1, M_middle, b1_1, M1_1, N1_1, extra_nodes0);
-	scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1, extra_nodes1);
-	scan_coef_Matrix_post1(A1_post1, M_post1, b1_post1, M1_post1, N1_post1, extra_nodes1);			//post1
+	scan_coef_Matrix_end1(A_end0, M_end, b_end0, M0, N0,0);										//end
+	scan_coef_Matrix_middle_1(A_middle_1, M_middle, b_middle_1, M1_1, N1_1, extra_nodes0);
+	scan_coef_Matrix_middle(A_middle, M_middle, b_middle, M1, N1, extra_nodes1);
+	scan_coef_Matrix_post1(A_middle_post1, M_post1, b_middle_post1, M1_post1, N1_post1, extra_nodes1);			//post1
 	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
-	scan_coef_Matrix_middle_5(A1_5, M_middle, b1_5, M1_5, N1_5, extra_nodes1);
-	scan_coef_Matrix_post2(A1_post2, M_post2, b1_post2, M1_post2, N1_post2, extra_nodes1);			//post2
-	scan_coef_Matrix_middle_7(A1_7, M_middle, b1_7, M1_7, N1_7,extra_nodes2);
+	scan_coef_Matrix_middle_5(A_middle_5, M_middle, b_middle_5, M1_5, N1_5, extra_nodes1);
+	scan_coef_Matrix_post2(A_middle_post2, M_post2, b_middle_post2, M1_post2, N1_post2, extra_nodes1);			//post2
+	scan_coef_Matrix_middle_7(A_middle_7, M_middle, b_middle_7, M1_7, N1_7, extra_nodes2);
 	///scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
 	//scan_coef_Matrix_middle(A1_post1, M_post1, b1_post1, M1_post1, N1_post1);			//post1
 	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
-	scan_coef_Matrix_middle_11(A1_11, M_middle, b1_11, M1_11, N1_11, extra_nodes1);
-	scan_coef_Matrix_end2(A2, M_end, b2, M2, N2, extra_nodes1);										//end
+	scan_coef_Matrix_middle_11(A_middle_11, M_middle, b_middle_11, M1_11, N1_11, extra_nodes1);
+	scan_coef_Matrix_end2(A_end1, M_end, b_end1, M2, N2, extra_nodes1);										//end
 
-	complex* X0 = new complex[N0];
+	//中间存储变量 X_* 表示最小二乘法的结果
+	complex* X_end0 = new complex[N0];
 	for (int i = 0; i != N0; i++)
-		X0[i] = zero;
-	complex* X1 = new complex[N1];
+		X_end0[i] = zero;
+	complex* X_middle = new complex[N1];
 	for (int i = 0; i != N1; i++)
-		X1[1] = zero;
+		X_middle[1] = zero;
 	complex* X_middle_post1 = new complex[N1_post1];
 	for (int i = 0; i != N1; i++)
 		X_middle_post1[1] = zero;
 	complex* X_middle_post2 = new complex[N1_post2];
 	for (int i = 0; i != N1; i++)
 		X_middle_post2[1] = zero;
-	complex* X2 = new complex[N2];
+	complex* X_end1 = new complex[N2];
 	for (int i = 0; i != N2; i++)
-		X2[i] = zero;
+		X_end1[i] = zero;
+	// B_* 表示最小二乘法的右端项
+	complex* B_end0 = new complex[M0];
+	for (int i = 0; i != M0; i++)
+		B_end0[i] = zero;
+	complex* B_middle = new complex[M1];
+	for (int i = 0; i != M1; i++)
+		B_middle[i] = zero;
+	//1,11 使用
+	complex* B_middle_1 = new complex[M1_1];
+	for (int i = 0; i != M1_1; i++)
+		B_middle_1[i] = zero;
+	//5,7 使用
+	complex* B_middle_5 = new complex[M1_5];
+	for (int i = 0; i != M1_5; i++)
+		B_middle_5[i] = zero;
+	complex* B_middle_post1 = new complex[M1_post1];
+	for (int i = 0; i != M1_post1; i++)
+		B_middle_post1[i] = zero;
+	complex* B_middle_post2 = new complex[M1_post2];
+	for (int i = 0; i != M1_post2; i++)
+		B_middle_post2[i] = zero;
+	complex* B_end1 = new complex[M2];
+	for (int i = 0; i != M2; i++)
+		B_end1[i] = zero;
+	//存储的最终结果 x 每个节点的数值结果
 	complex* x = new complex[M];
 	for (int i = 0; i != M; i++)
 		x[i] = zero;
-	complex* B0 = new complex[M0];
-	for (int i = 0; i != M0; i++)
-		B0[i] = zero;
-	complex* B1 = new complex[M1];
-	for (int i = 0; i != M1; i++)
-		B1[i] = zero;
-	complex* B1_post1 = new complex[M1_post1];
-	for (int i = 0; i != M1_post1; i++)
-		B1_post1[i] = zero;
-	complex* B1_post2 = new complex[M1_post2];
-	for (int i = 0; i != M1_post2; i++)
-		B1_post2[i] = zero;
-	complex* B2 = new complex[M2];
-	for (int i = 0; i != M2; i++)
-		B2[i] = zero;
 
 	double bnorm = 0.0;
 	bnorm = VectorNorm(M, Binc);
 
-	double eps = bnorm*1e-3;
+	double eps = bnorm*1e-2;
 	int times = 0;
 	double sinta;
 	double sinta1 = 1.75;
@@ -17596,25 +17606,26 @@ void main()// DDM-10 region
 	//迭代过程 未完成！！！！！
 	while (bnorm > eps)
 	{
+		//快速投影系数
 		if (times == 0)
 			sinta = 1;
 		else
 			sinta = sinta1;
 
 		//调用投影函数
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//end
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//post1
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);	
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//post2
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//post1
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);
-		projective_process(A0, b0, B0, X0, Binc, x, startpos[0], 0, sinta, M0, N0);		//end
+		projective_process(A_end0, b_end0, B_end0, X_end0, Binc, x, startpos[0], 0, sinta, M0, N0);		//end
+		projective_process(A_middle_1, b_middle_1, B_middle_1, X_middle, Binc, x, startpos[1], extra_nodes0, sinta, M1_1, N1_1);
+		projective_process(A_middle, b_middle, B_middle, X_middle, Binc, x, startpos[2], extra_nodes1, sinta, M1, N1);
+		projective_process(A_middle_post1, b_middle_post1, B_middle_post1, X_middle_post1, Binc, x, startpos[3], extra_nodes1, sinta, M1_post1, N1_post1);		//post1
+		projective_process(A_middle, b_middle, B_middle, X_middle, Binc, x, startpos[4], extra_nodes1, sinta, M1, N1);
+		projective_process(A_middle_5, b_middle_5, B_middle_5, X_middle, Binc, x, startpos[5], extra_nodes1, sinta, M1_5, N1_5);
+		projective_process(A_middle_post2, b_middle_post2, B_middle_post2, X_middle_post2, Binc, x, startpos[6], extra_nodes1, sinta, M1_post2, N1_post2);		//post2
+		projective_process(A_middle_7, b_middle_7, B_middle_5, X_middle, Binc, x, startpos[7], extra_nodes2, sinta, M1_7, N1_7);
+		projective_process(A_middle, b_middle, B_middle, X_middle, Binc, x, startpos[8], extra_nodes1, sinta, M1, N1);
+		projective_process(A_middle_post1, b_middle_post1, B_middle_post1, X_middle_post1, Binc, x, startpos[9], extra_nodes1, sinta, M1_post1, N1_post1);		//post1
+		projective_process(A_middle, b_middle, B_middle, X_middle, Binc, x, startpos[10], extra_nodes1, sinta, M1, N1);
+		projective_process(A_middle_11, b_middle_11, B_middle_1, X_middle, Binc, x, startpos[11], extra_nodes1, sinta, M1_11, N1_11);
+		projective_process(A_end1, b_end1, B_end1, X_end1, Binc, x, startpos[12], extra_nodes1, sinta, M2, N2);		//end
 
 		bnorm = 0.0;
 		bnorm = VectorNorm(M, Binc);
@@ -17622,8 +17633,144 @@ void main()// DDM-10 region
 		cout << ++times << " cond:" << bnorm << endl;
 	}
 	
+	//用s参数验证程序正确性***************************
+	double s11 = 0, s21 = 0;//s11,s12
+	complex x1[N_a + 2], x2, x3;//x1为左端反射波，x2为右端透射波
+	x1[0].real = 0;
+	x1[0].image = 0;
+	x1[N_a + 1].real = 0;
+	x1[N_a + 1].image = 0;
+	for (j = N_d0; j<(N_d0 + N_a); j++)
+	{
+		x1[j - N_d0 + 1].real = x[j].real;
+		x1[j - N_d0 + 1].image = x[j].image;
+	}
+	//	complex Einc2[N_a+2];
+	//	for( j=0; j<(N_a+2); j++ )
+	//	{
+	//		Einc2[j].real=sin( pi*j*4*dx/a );
+	//		Einc2[j].image=0;
+	//		x1[j].real=x1[j].real-Einc2[j].real;
+	//		x1[j].image=x1[j].image-Einc2[j].image;
+	//	}
+	x2.real = 0;
+	x2.image = 0;
+	x3.real = 0;
+	x3.image = 0;
+	for (j = 0; j<(N_a + 1); j++)
+	{
+		x2.real = (x1[j].real + x1[j + 1].real) / 2;
+		x2.image = (x1[j].image + x1[j + 1].image) / 2;
+		x3.real = x3.real + x2.real * 4 * dx;
+		x3.image = x3.image + x2.image * 4 * dx;
+		//	cout<<x2.real<<"  "<<x2.image<<endl;
+	}
+	s11 = sqrt(x3.real*x3.real + x3.image*x3.image) / ((a / pi) * (1 - cos(pi)));
+	cout << "s11 = " << s11 << " -- " << (20 * log10(s11)) << " dB" << endl;
+	//求 s21
+	for (j = N_d0; j<(N_d0 + N_a); j++)
+	{
+		x1[j - N_d0 + 1].real = x[j + M - Nx_side].real;
+		x1[j - N_d0 + 1].image = x[j + M - Nx_side].image;
+	}
+	x2.real = 0;
+	x2.image = 0;
+	x3.real = 0;
+	x3.image = 0;
+	for (j = 0; j<(N_a + 1); j++)
+	{
+		x2.real = (x1[j].real + x1[j + 1].real) / 2;
+		x2.image = (x1[j].image + x1[j + 1].image) / 2;
+		x3.real = x3.real + x2.real * 4 * dx;
+		x3.image = x3.image + x2.image * 4 * dx;
+	}
+	s21 = sqrt(x3.real*x3.real + x3.image*x3.image) / ((a / pi) * (1 - cos(pi)));
+	cout << "s21 = " << s21 << " -- " << (20 * log10(s21)) << " dB" << endl;
+	cout << "s11*s11+s21*s21 = " << (s11*s11 + s21*s21) << endl;
+	//输出频率点及S参数
+	ofstream outfile3("result1.txt", ios::app);
+	outfile3 << "频率：" << (1200 / 1.483 / N_dx) << endl;
+	outfile3 << "s21 = " << (20 * log10(s21)) << " dB" << endl;
+	outfile3 << "s11 = " << (20 * log10(s11)) << " dB" << endl;
+	outfile3 << "s21=" << s21 << " s11=" << s11 << endl;
+	outfile3.close();
+	
+	ofstream out_e("Evalue.txt");
+	for (int i = 0; i != M; i++)
+		out_e << x[i].amplitude() << endl;
+	out_e.close();
 
-//计算所用时间并输出
+	//释放内存
+	delete Binc;
+	for (int i = 0; i != M0; i++)
+		delete A_end0[i];
+	delete A_end0;
+	for (int i = 0; i != N0; i++)
+		delete b_end0[i];
+	delete b_end0;
+	for (int i = 0; i != M1; i++)
+		delete A_middle[i];
+	delete A_middle;
+	for (int i = 0; i != M1; i++)
+		delete b_middle[i];
+	delete b_middle;
+	for (int i = 0; i != M1_1; i++)
+		delete A_middle_1[i];
+	delete A_middle_1;
+	for (int i = 0; i != M1_1; i++)
+		delete b_middle_1[i];
+	delete b_middle_1;
+	for (int i = 0; i != M1_5; i++)
+		delete A_middle_5[i];
+	delete A_middle_5;
+	for (int i = 0; i != M1_5; i++)
+		delete b_middle_5[i];
+	delete b_middle_5;
+	for (int i = 0; i != M1_7; i++)
+		delete A_middle_7[i];
+	delete A_middle_7;
+	for (int i = 0; i != M1_7; i++)
+		delete b_middle_7[i];
+	delete b_middle_7;
+	for (int i = 0; i != M1_11; i++)
+		delete A_middle_11[i];
+	delete A_middle_11;
+	for (int i = 0; i != M1_11; i++)
+		delete b_middle_11[i];
+	delete b_middle_11;
+	for (int i = 0; i != M1_post1; i++)
+		delete A_middle_post1[i];
+	delete A_middle_post1;
+	for (int i = 0; i != M1_post1; i++)
+		delete b_middle_post1[i];
+	delete b_middle_post1;
+	for (int i = 0; i != M1_post2; i++)
+		delete A_middle_post2[i];
+	delete A_middle_post2;
+	for (int i = 0; i != M1_post2; i++)
+		delete b_middle_post2[i];
+	delete b_middle_post2;
+	for (int i = 0; i != M2; i++)
+		delete A_end1[i];
+	delete A_end1;
+	for (int i = 0; i != M2; i++)
+		delete b_end1[i];
+	delete b_end1;
+	delete X_end0;
+	delete X_middle;
+	delete X_middle_post1;
+	delete X_middle_post2;
+	delete X_end1;
+	delete B_end0;
+	delete B_middle;
+	delete B_middle_1;
+	delete B_middle_5;
+	delete B_end1;
+	delete B_middle_post1;
+	delete B_middle_post2;
+	delete x;
+
+	//计算所用时间并输出
 	time_t end;
 	end = time(&end);
     cout <<"程序所用时间："<<( end - begin )<<"(s)"<<endl;
