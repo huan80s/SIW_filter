@@ -69,11 +69,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cgmethod.cpp" />
-    <ClCompile Include="coef_location_fix.cpp" />
     <ClCompile Include="Complex.cpp" />
     <ClCompile Include="Evalue.cpp" />
     <ClCompile Include="filter_ODPM.cpp" />
     <ClCompile Include="getB.cpp" />
+    <ClCompile Include="show_binc.cpp" />
     <ClCompile Include="Vector.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

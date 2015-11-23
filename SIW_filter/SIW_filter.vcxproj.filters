@@ -41,7 +41,7 @@
     <ClCompile Include="Vector.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="coef_location_fix.cpp">
+    <ClCompile Include="show_binc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

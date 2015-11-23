@@ -68,7 +68,8 @@ void cgmethod(complex** A, int** Coef_Location, complex* right, complex* x, int 
 	double fenzi = 0.0;
 	double fenmu = 0.0;
 	complex a;
-	double eps = 1e-10;
+	//收敛精度 
+	double eps = 1e-6;
 	int time = 0;
 	complex* Ap_temp = new complex[sizeM];		//储存AH*(A*P)的中间变量
 	complex* Ap_conj_temp = new complex[sizeM];

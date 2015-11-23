@@ -1,25 +1,25 @@
-﻿生成启动时间为 2015/11/17 19:10:14。
+﻿生成启动时间为 2015/11/20 16:34:34。
      1>项目“D:\VisualProject\5SIW_Filter\SIW_filter\SIW_filter\SIW_filter.vcxproj”在节点 2 上(Build 个目标)。
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt filter_ODPM.cpp
          filter_ODPM.cpp
-     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(6531): warning C4065: switch 语句包含“default”但是未包含“case”标签
-     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(7108): warning C4065: switch 语句包含“default”但是未包含“case”标签
-     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(9116): warning C4065: switch 语句包含“default”但是未包含“case”标签
-     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(11118): warning C4065: switch 语句包含“default”但是未包含“case”标签
-     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(13153): warning C4065: switch 语句包含“default”但是未包含“case”标签
-     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(16107): warning C4065: switch 语句包含“default”但是未包含“case”标签
+     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(6527): warning C4065: switch 语句包含“default”但是未包含“case”标签
+     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(7104): warning C4065: switch 语句包含“default”但是未包含“case”标签
+     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(9109): warning C4065: switch 语句包含“default”但是未包含“case”标签
+     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(11111): warning C4065: switch 语句包含“default”但是未包含“case”标签
+     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(13145): warning C4065: switch 语句包含“default”但是未包含“case”标签
+     1>d:\visualproject\5siw_filter\siw_filter\siw_filter\filter_odpm.cpp(16099): warning C4065: switch 语句包含“default”但是未包含“case”标签
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\VisualProject\5SIW_Filter\SIW_filter\Debug\SIW_filter.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\VisualProject\5SIW_Filter\SIW_filter\Debug\SIW_filter.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\VisualProject\5SIW_Filter\SIW_filter\Debug\SIW_filter.lib" /MACHINE:X86 Debug\cgmethod.obj
-         Debug\coef_location_fix.obj
          Debug\Complex.obj
          Debug\Evalue.obj
          Debug\filter_ODPM.obj
          Debug\getB.obj
+         Debug\show_binc.obj
          Debug\Vector.obj
          SIW_filter.vcxproj -> D:\VisualProject\5SIW_Filter\SIW_filter\Debug\SIW_filter.exe
      1>已完成生成项目“D:\VisualProject\5SIW_Filter\SIW_filter\SIW_filter\SIW_filter.vcxproj”(Build 个目标)的操作。
 
 生成成功。
 
-已用时间 00:00:01.08
+已用时间 00:00:01.57

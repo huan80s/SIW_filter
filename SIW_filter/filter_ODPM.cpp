@@ -13,6 +13,7 @@
 #include <math.h>
 #include <time.h>
 #include <fstream>
+#include <iomanip>
 #include "BasicFunc.h"
 #include "Complex.h"
 #include "Vector.h"
@@ -272,11 +273,6 @@ void boundary_node( int j, int i, int type, int i_0, int i_4, complex** Coef, in
 		Coef_location[j][1]=i-1;
 	}
 };
-
-//处理相邻区域
-void coef_fix_location_5(int cur, int* lo, int i_0, int i_1, int i_2, int i_3, int i_4, int key);
-void coef_fix_location_6(int cur, int* lo, int i_0, int i_1, int i_2, int i_3, int i_4, int i_5, int key);
-void coef_fix_location_8(int cur, int* lo, int i_0, int i_1, int i_2, int i_3, int i_4, int i_5, int i_6, int i_7, int key);
 
 //*********************************************************************************//
 //输入端口区域1参数扫描：n代表重叠区域号，Ey[n][M]代表每次迭代所求的解
@@ -16969,13 +16965,13 @@ void scan_binc(complex* b, int num_total)	//4dx!!!!
 	}
 	//参数扫描
 	int j = 0;
-	for (int i = 0; i<Nx_1; i++)//left截断左边界 
+	for (int i = 0; i<Nx_side; i++)//left截断左边界 1阶mur吸收边界条件 均匀网格：4dx
 	{
 		switch (i)
 		{
-		case 0:
+		case 0:          //角点处理：场平均吸收边条:kz/k!?!??!!?
 			break;
-		case (Nx_1 - 1) :
+		case (Nx_side - 1) :
 			break;
 		case (N_d0 - 1) :
 			break;
@@ -16994,6 +16990,7 @@ void scan_binc(complex* b, int num_total)	//4dx!!!!
 		}
 		j = j + 1;
 	}
+
 	if (Debug)
 	{
 		ofstream out_b("binc.txt");
@@ -17010,8 +17007,24 @@ void scan_binc(complex* b, int num_total)	//4dx!!!!
 //更新B
 void getB(complex* right, complex**A, int **Coef_Location, complex *x, int sizeM, int sizeN, int startpos);
 
-//用s参数验证程序正确性
-//输入全部场值
+
+
+//投影过程的封装函数
+void projective_process(complex **A, int ** b, complex *B, complex *X, complex* Binc, complex* x, int startpos, int extra_nodes, double sinta, int M, int N){
+	for (int i = 0; i != M; i++)
+		B[i] = Binc[i + startpos];
+	cgmethod(A, b, B, X, M, N, N_matrix);
+	for (int i = 0; i != N; i++)
+	{
+		X[i] = X[i] * sinta;
+		x[i + startpos + extra_nodes] = x[i + startpos + extra_nodes] + X[i];
+	}
+	getB(Binc, A, b, X, M, N, startpos);
+}
+
+//********************************************************************************//
+//数据处理
+//********************************************************************************//
 void get_s_parameter(complex **Ey_total2_end){
 	double s11 = 0, s21 = 0;//s11,s12
 	complex x1[N_a + 2], x2, x3;//x1为左端反射波，x2为右端透射波
@@ -17076,7 +17089,7 @@ void get_s_parameter(complex **Ey_total2_end){
 }
 
 //全部场值图的辅助函数
-void show_middle(int N_p, int N_q, double** Ey_who, complex** Ey_mid)
+void show_middle(int N_p, int N_q, double** Ey_who, double** Ey_mid)
 {
 	int j = 0, k = 0;
 	int Nx_22 = Nx_side + 2 * (N_w + 1);
@@ -17084,289 +17097,655 @@ void show_middle(int N_p, int N_q, double** Ey_who, complex** Ey_mid)
 	for (k = 0; k<(N_slot + 1); k++)//left
 	{
 		for (j = 0; j<(N_d0 - 2); j++)
-			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + j].amplitude();//1
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + j];//1
 		for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
-			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + N_d0 - 1 + (j - N_d0 + 2) * 2].amplitude();//2
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + N_d0 - 1 + (j - N_d0 + 2) * 2];//2
 		for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
-			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_1 + 1 + (j - N_d0 - N_w - 3)].amplitude();//3
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_1 + 1 + (j - N_d0 - N_w - 3)];//3
 		for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
-			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_1 + N_a - 2 + (j - N_d0 - N_w - N_a + 1) * 2].amplitude();//4
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_1 + N_a - 2 + (j - N_d0 - N_w - N_a + 1) * 2];//4
 		for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
-			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_11 + 1 + (j - Nx_22 + N_d0 - 2)].amplitude();//5
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_11 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 	}
 	// line 3--Num 5
 	for (j = 0; j<(N_d0 - 2); j++)
-		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + j].amplitude();//1
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 - 1].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 + 1].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 + 5].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 + 8].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 - 3].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 - 1].amplitude();//2
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + j];//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 + 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 + 5];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + N_d0 + 8];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 - 3];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 - 1];//2
 	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
-		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 + 1 + (j - N_d0 - N_w - 3)].amplitude();//3
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 + N_a - 2].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 + N_a].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node52 - 1].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][Nx_22 - N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node52 + 2].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_55 - 3].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_55 - 1].amplitude();//4
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 + N_a - 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_5 + N_a];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node52 - 1];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][Nx_22 - N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node52 + 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_55 - 3];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_55 - 1];//4
 	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
-		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_55 + 1 + (j - Nx_22 + N_d0 - 2)].amplitude();//5
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 1][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Node_55 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
 	// line 4--Num 9
 	for (j = 0; j<(N_d0 - 2); j++)
-		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + j].amplitude();//1
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + N_d0 - 1].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + N_d0 + 1].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 - 3].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 - 1].amplitude();//2
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + j];//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + N_d0 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + N_d0 + 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 - 3];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 - 1];//2
 	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
-		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + 1 + (j - N_d0 - N_w - 3)].amplitude();//3
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + N_a - 2].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + N_a].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_99 - 3].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_99 - 1].amplitude();//4
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + N_a - 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_9 + N_a];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_99 - 3];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_99 - 1];//4
 	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
-		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_99 + 1 + (j - Nx_22 + N_d0 - 2)].amplitude();//5
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 + Num7 + Num8 + Node_99 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 	// line 5--Num 13
 	for (j = 0; j<(N_d0 - 2); j++)
-		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + j].amplitude();//1
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 - 1].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 + 1].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 + 5].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 + 8].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 - 3].amplitude();//2
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 - 1].amplitude();//2
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + j];//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 + 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 + 5];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + N_d0 + 8];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 - 3];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 - 1];//2
 	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
-		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + 1 + (j - N_d0 - N_w - 3)].amplitude();//3
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + N_a - 2].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + N_a].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node52 - 1].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][Nx_22 - N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node52 + 2].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_55 - 3].amplitude();//4
-	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_55 - 1].amplitude();//4
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + N_a - 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_5 + N_a];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node52 - 1];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][Nx_22 - N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node52 + 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_55 - 3];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_55 - 1];//4
 	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
-		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_55 + 1 + (j - Nx_22 + N_d0 - 2)].amplitude();//5
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + N_slot + 3][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1 + Num2 + Num3 + Num4 + Num5 + Num6 * 2 + Num7 * 2 + Num8 * 2 + Num9 + Node_55 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
 }
-void show_post1( int N_p, int N_q, double** Ey_who, complex** Ey_mid )
+void show_post1(int N_p, int N_q, double** Ey_who, double** Ey_mid)
 {
-	int j=0,k=0;
-	int Nx_22=Nx_side+2*(N_w+1);
-		//line 1、2
-	for ( k=0; k<(N_slot+1); k++ )//left
+	int j = 0, k = 0;
+	int Nx_22 = Nx_side + 2 * (N_w + 1);
+	//line 1、2
+	for (k = 0; k<(N_slot + 1); k++)//left
 	{
-		for ( j=0; j<(N_d0-2); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+j].amplitude();//1
-		for ( j=(N_d0-2); j<=(N_d0+N_w+2); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+N_d0-1+(j-N_d0+2)*2].amplitude();//2
-		for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+Node_1_p2+1+(j-N_d0-N_w-3)].amplitude();//3
-		for ( j=(N_d0+N_w+N_a-1); j<=(Nx_22-N_d0+1); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+Node_1_p2+N_a-2+(j-N_d0-N_w-N_a+1)*2].amplitude();//4
-		for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+k][j]=Ey_mid[N_q][(Nx_2+Nx_3)*k+Node_11_p2+1+(j-Nx_22+N_d0-2)].amplitude();//5
+		for (j = 0; j<(N_d0 - 2); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + j];//1
+		for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + N_d0 - 1 + (j - N_d0 + 2) * 2];//2
+		for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_1_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+		for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_1_p2 + N_a - 2 + (j - N_d0 - N_w - N_a + 1) * 2];//4
+		for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + k][j] = Ey_mid[N_q][(Nx_2 + Nx_3)*k + Node_11_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 	}
 	// line 3--Num 5_p2
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+2][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+j].amplitude();//1
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][N_d0-2]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+N_d0-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][N_d0-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+N_d0+1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][N_d0+0]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node51_p1-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][N_d0+N_w]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node51_p1+2].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][N_d0+N_w+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node_5_p1-3].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][N_d0+N_w+2]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node_5_p1-1].amplitude();//2
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+2][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node_5_p1+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][N_d0+N_w+N_a-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node_5_p1+N_a-2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][N_d0+N_w+N_a]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node_5_p1+N_a].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][N_d0+N_w+N_a+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node52_p1-1].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][Nx_22-N_d0-1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node52_p1+2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][Nx_22-N_d0]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node_55_p1-3].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+2][Nx_22-N_d0+1]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node_55_p1-1].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+2][j]=Ey_mid[N_q][(Nx_2+Nx_3)*1+Num1_p1+Num2_p1+Num3_p1+Num4_p1+Node_55_p1+1+(j-Nx_22+N_d0-2)].amplitude();//5
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + j];//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][N_d0 - 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + N_d0 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + N_d0 + 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][N_d0 + 0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node51_p1 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][N_d0 + N_w] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node51_p1 + 2];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][N_d0 + N_w + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node_5_p1 - 3];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][N_d0 + N_w + 2] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node_5_p1 - 1];//2
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node_5_p1 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node_5_p1 + N_a - 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][N_d0 + N_w + N_a] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node_5_p1 + N_a];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node52_p1 - 1];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][Nx_22 - N_d0 - 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node52_p1 + 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][Nx_22 - N_d0] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node_55_p1 - 3];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][Nx_22 - N_d0 + 1] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node_55_p1 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 2][j] = Ey_mid[N_q][(Nx_2 + Nx_3) * 1 + Num1_p1 + Num2_p1 + Num3_p1 + Num4_p1 + Node_55_p1 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
 	// line 4--Num 9_p2
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+3][j]=Ey_mid[N_q][M_post1_q1-Num9_p1+j].amplitude();//1
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+3][N_d0-2]=Ey_mid[N_q][M_post1_q1-Num9_p1+N_d0-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+3][N_d0-1]=Ey_mid[N_q][M_post1_q1-Num9_p1+N_d0+1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+3][N_d0+N_w+1]=Ey_mid[N_q][M_post1_q1-Num9_p1+Node_9_p1-3].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+3][N_d0+N_w+2]=Ey_mid[N_q][M_post1_q1-Num9_p1+Node_9_p1-1].amplitude();//2
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+3][j]=Ey_mid[N_q][M_post1_q1-Num9_p1+Node_9_p1+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+3][N_d0+N_w+N_a-1]=Ey_mid[N_q][M_post1_q1-Num9_p1+Node_9_p1+N_a-2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+3][N_d0+N_w+N_a]=Ey_mid[N_q][M_post1_q1-Num9_p1+Node_9_p1+N_a].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+3][Nx_22-N_d0]=Ey_mid[N_q][M_post1_q1-Num9_p1+Node_99_p1-3].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+3][Nx_22-N_d0+1]=Ey_mid[N_q][M_post1_q1-Num9_p1+Node_99_p1-1].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+3][j]=Ey_mid[N_q][M_post1_q1-Num9_p1+Node_99_p1+1+(j-Nx_22+N_d0-2)].amplitude();//5
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][j] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + j];//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][N_d0 - 2] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + N_d0 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][N_d0 - 1] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + N_d0 + 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][N_d0 + N_w + 1] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + Node_9_p1 - 3];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][N_d0 + N_w + 2] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + Node_9_p1 - 1];//2
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][j] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + Node_9_p1 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + Node_9_p1 + N_a - 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][N_d0 + N_w + N_a] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + Node_9_p1 + N_a];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][Nx_22 - N_d0] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + Node_99_p1 - 3];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][Nx_22 - N_d0 + 1] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + Node_99_p1 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 3][j] = Ey_mid[N_q][M_post1_q1 - Num9_p1 + Node_99_p1 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
 	// line 5--Num 13_p2
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+4][j]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+j].amplitude();//1
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0-2]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+N_d0-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0-1]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+N_d0+1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+0]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node131_p1-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node131_p1+2].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w+1]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node_13_p2-3].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w+2]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node_13_p2-1].amplitude();//2
-	
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+7); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+4][j]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node_13_p1+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w+7]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node132_p1+2].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w+8]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node132_p1+4].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w+9]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node132_p1+6].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w+10]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node132_p1+8].amplitude();//3
-	for ( j=(N_d0+N_w+11); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+4][j]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node133_p1+(j-N_d0-N_w-11)].amplitude();//3
-	
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w+N_a-1]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node133_p1+5].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w+N_a]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node133_p1+7].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][N_d0+N_w+N_a+1]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node134_p1-1].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][Nx_22-N_d0-1]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node134_p1+2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][Nx_22-N_d0]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node_1313_p1-3].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+4][Nx_22-N_d0+1]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node_1313_p1-1].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+4][j]=Ey_mid[N_q][M_post1_q1+Num10_p1+Num11_p1+Num12_p1+Node_1313_p1+1+(j-Nx_22+N_d0-2)].amplitude();//5
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][j] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + j];//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 - 2] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + N_d0 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 - 1] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + N_d0 + 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + 0] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node131_p1 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node131_p1 + 2];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w + 1] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node_13_p2 - 3];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w + 2] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node_13_p2 - 1];//2
+
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 7); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][j] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node_13_p1 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w + 7] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node132_p1 + 2];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w + 8] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node132_p1 + 4];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w + 9] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node132_p1 + 6];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w + 10] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node132_p1 + 8];//3
+	for (j = (N_d0 + N_w + 11); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][j] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node133_p1 + (j - N_d0 - N_w - 11)];//3
+
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node133_p1 + 5];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w + N_a] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node133_p1 + 7];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node134_p1 - 1];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][Nx_22 - N_d0 - 1] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node134_p1 + 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][Nx_22 - N_d0] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node_1313_p1 - 3];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][Nx_22 - N_d0 + 1] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node_1313_p1 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 4][j] = Ey_mid[N_q][M_post1_q1 + Num10_p1 + Num11_p1 + Num12_p1 + Node_1313_p1 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
 	// line 6--Num 17_p2   
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+5][j]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+j].amplitude();//1
-	for ( j=(N_d0-2); j<=(N_d0+N_w+2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+5][j]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+N_d0-1+(j-N_d0+2)*2].amplitude();//2
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][j] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + j];//1
+	for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][j] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + N_d0 - 1 + (j - N_d0 + 2) * 2];//2
 
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+7); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+5][j]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+Node_17_p1+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+5][N_d0+N_w+7]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+Node173_p1+2].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+5][N_d0+N_w+8]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+Node173_p1+5].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+5][N_d0+N_w+9]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+Node174_p1-5].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+5][N_d0+N_w+10]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+Node174_p1-2].amplitude();//3
-	for ( j=(N_d0+N_w+11); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+5][j]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+Node174_p1+(j-N_d0-N_w-11)].amplitude();//3
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 7); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][j] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + Node_17_p1 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][N_d0 + N_w + 7] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + Node173_p1 + 2];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][N_d0 + N_w + 8] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + Node173_p1 + 5];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][N_d0 + N_w + 9] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + Node174_p1 - 5];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][N_d0 + N_w + 10] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + Node174_p1 - 2];//3
+	for (j = (N_d0 + N_w + 11); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][j] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + Node174_p1 + (j - N_d0 - N_w - 11)];//3
 
-	for ( j=(N_d0+N_w+N_a-1); j<=(Nx_22-N_d0+1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+5][j]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+Node174_p1+5+(j-N_d0-N_w-N_a+1)*2].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+5][j]=Ey_mid[N_q][M_post1_q2-Num17_p1-Num18_p1-Num19_p1+Node_1717_p1+1+(j-Nx_22+N_d0-2)].amplitude();//5
+	for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][j] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + Node174_p1 + 5 + (j - N_d0 - N_w - N_a + 1) * 2];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 5][j] = Ey_mid[N_q][M_post1_q2 - Num17_p1 - Num18_p1 - Num19_p1 + Node_1717_p1 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
 	// line 7--Num 21_p2  
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+6][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+j].amplitude();//1
-	for ( j=(N_d0-2); j<=(N_d0+N_w+2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+6][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+N_d0-1+(j-N_d0+2)*2].amplitude();//2
-	
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+7); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+6][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+Node_17_p1+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+6][N_d0+N_w+7]=Ey_mid[N_q][M_post1_q2+Num18_p1+Node173_p1+2].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+6][N_d0+N_w+8]=Ey_mid[N_q][M_post1_q2+Num18_p1+Node173_p1+5].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+6][N_d0+N_w+9]=Ey_mid[N_q][M_post1_q2+Num18_p1+Node174_p1-5].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+6][N_d0+N_w+10]=Ey_mid[N_q][M_post1_q2+Num18_p1+Node174_p1-2].amplitude();//3
-	for ( j=(N_d0+N_w+11); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+6][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+Node174_p1+(j-N_d0-N_w-11)].amplitude();//3
-	
-	for ( j=(N_d0+N_w+N_a-1); j<=(Nx_22-N_d0+1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+6][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+Node174_p1+5+(j-N_d0-N_w-N_a+1)*2].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+6][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+Node_1717_p1+1+(j-Nx_22+N_d0-2)].amplitude();//5
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + j];//1
+	for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + N_d0 - 1 + (j - N_d0 + 2) * 2];//2
+
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 7); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Node_17_p1 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][N_d0 + N_w + 7] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Node173_p1 + 2];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][N_d0 + N_w + 8] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Node173_p1 + 5];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][N_d0 + N_w + 9] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Node174_p1 - 5];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][N_d0 + N_w + 10] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Node174_p1 - 2];//3
+	for (j = (N_d0 + N_w + 11); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Node174_p1 + (j - N_d0 - N_w - 11)];//3
+
+	for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Node174_p1 + 5 + (j - N_d0 - N_w - N_a + 1) * 2];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 6][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Node_1717_p1 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
 	// line 8--Num 25_p2 (Num 13_p2)
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+7][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+j].amplitude();//1
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0-2]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+N_d0-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0-1]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+N_d0+1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+0]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node131_p1-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node131_p1+2].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w+1]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node_13_p2-3].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w+2]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node_13_p2-1].amplitude();//2
-	
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+7); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+7][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node_13_p1+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w+7]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node132_p1+2].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w+8]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node132_p1+4].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w+9]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node132_p1+6].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w+10]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node132_p1+8].amplitude();//3
-	for ( j=(N_d0+N_w+11); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+7][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node133_p1+(j-N_d0-N_w-11)].amplitude();//3
-	
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w+N_a-1]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node133_p1+5].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w+N_a]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node133_p1+7].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][N_d0+N_w+N_a+1]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node134_p1-1].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][Nx_22-N_d0-1]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node134_p1+2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][Nx_22-N_d0]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node_1313_p1-3].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+7][Nx_22-N_d0+1]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node_1313_p1-1].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+7][j]=Ey_mid[N_q][M_post1_q2+Num18_p1+Num17_p1+Num16_p1+Num15_p1+Num14_p1+Node_1313_p1+1+(j-Nx_22+N_d0-2)].amplitude();//5
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + j];//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 - 2] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + N_d0 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 - 1] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + N_d0 + 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + 0] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node131_p1 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node131_p1 + 2];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w + 1] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node_13_p2 - 3];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w + 2] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node_13_p2 - 1];//2
+
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 7); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node_13_p1 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w + 7] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node132_p1 + 2];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w + 8] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node132_p1 + 4];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w + 9] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node132_p1 + 6];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w + 10] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node132_p1 + 8];//3
+	for (j = (N_d0 + N_w + 11); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node133_p1 + (j - N_d0 - N_w - 11)];//3
+
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node133_p1 + 5];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w + N_a] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node133_p1 + 7];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node134_p1 - 1];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][Nx_22 - N_d0 - 1] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node134_p1 + 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][Nx_22 - N_d0] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node_1313_p1 - 3];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][Nx_22 - N_d0 + 1] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node_1313_p1 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 7][j] = Ey_mid[N_q][M_post1_q2 + Num18_p1 + Num17_p1 + Num16_p1 + Num15_p1 + Num14_p1 + Node_1313_p1 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
 	// line 9--Num 29_p2 (4--Num 9_p2)
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+8][j]=Ey_mid[N_q][M_post1_q3-Num9_p1+j].amplitude();//1
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+8][N_d0-2]=Ey_mid[N_q][M_post1_q3-Num9_p1+N_d0-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+8][N_d0-1]=Ey_mid[N_q][M_post1_q3-Num9_p1+N_d0+1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+8][N_d0+N_w+1]=Ey_mid[N_q][M_post1_q3-Num9_p1+Node_9_p1-3].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+8][N_d0+N_w+2]=Ey_mid[N_q][M_post1_q3-Num9_p1+Node_9_p1-1].amplitude();//2
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+8][j]=Ey_mid[N_q][M_post1_q3-Num9_p1+Node_9_p1+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+8][N_d0+N_w+N_a-1]=Ey_mid[N_q][M_post1_q3-Num9_p1+Node_9_p1+N_a-2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+8][N_d0+N_w+N_a]=Ey_mid[N_q][M_post1_q3-Num9_p1+Node_9_p1+N_a].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+8][Nx_22-N_d0]=Ey_mid[N_q][M_post1_q3-Num9_p1+Node_99_p1-3].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+8][Nx_22-N_d0+1]=Ey_mid[N_q][M_post1_q3-Num9_p1+Node_99_p1-1].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+8][j]=Ey_mid[N_q][M_post1_q3-Num9_p1+Node_99_p1+1+(j-Nx_22+N_d0-2)].amplitude();//5
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][j] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + j];//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][N_d0 - 2] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + N_d0 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][N_d0 - 1] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + N_d0 + 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][N_d0 + N_w + 1] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + Node_9_p1 - 3];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][N_d0 + N_w + 2] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + Node_9_p1 - 1];//2
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][j] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + Node_9_p1 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + Node_9_p1 + N_a - 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][N_d0 + N_w + N_a] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + Node_9_p1 + N_a];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][Nx_22 - N_d0] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + Node_99_p1 - 3];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][Nx_22 - N_d0 + 1] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + Node_99_p1 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 8][j] = Ey_mid[N_q][M_post1_q3 - Num9_p1 + Node_99_p1 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
 	// line 10--Num 33_p2 (3--Num 5_p2)
-	for ( j=0; j<(N_d0-2); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+9][j]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+j].amplitude();//1
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][N_d0-2]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+N_d0-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][N_d0-1]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+N_d0+1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][N_d0+0]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node51_p1-1].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][N_d0+N_w]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node51_p1+2].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][N_d0+N_w+1]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node_5_p1-3].amplitude();//2
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][N_d0+N_w+2]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node_5_p1-1].amplitude();//2
-	for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+9][j]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node_5_p1+1+(j-N_d0-N_w-3)].amplitude();//3
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][N_d0+N_w+N_a-1]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node_5_p1+N_a-2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][N_d0+N_w+N_a]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node_5_p1+N_a].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][N_d0+N_w+N_a+1]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node52_p1-1].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][Nx_22-N_d0-1]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node52_p1+2].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][Nx_22-N_d0]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node_55_p1-3].amplitude();//4
-	Ey_who[N_d1+1+(N_s+N_w)*N_p+9][Nx_22-N_d0+1]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node_55_p1-1].amplitude();//4
-	for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-		Ey_who[N_d1+1+(N_s+N_w)*N_p+9][j]=Ey_mid[N_q][M_post1_q3+Num8_p1+Num7_p1+Num6_p1+Node_55_p1+1+(j-Nx_22+N_d0-2)].amplitude();//5
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][j] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + j];//1
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][N_d0 - 2] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + N_d0 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][N_d0 - 1] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + N_d0 + 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][N_d0 + 0] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node51_p1 - 1];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][N_d0 + N_w] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node51_p1 + 2];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][N_d0 + N_w + 1] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node_5_p1 - 3];//2
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][N_d0 + N_w + 2] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node_5_p1 - 1];//2
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][j] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node_5_p1 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][N_d0 + N_w + N_a - 1] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node_5_p1 + N_a - 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][N_d0 + N_w + N_a] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node_5_p1 + N_a];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][N_d0 + N_w + N_a + 1] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node52_p1 - 1];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][Nx_22 - N_d0 - 1] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node52_p1 + 2];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][Nx_22 - N_d0] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node_55_p1 - 3];//4
+	Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][Nx_22 - N_d0 + 1] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node_55_p1 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 9][j] = Ey_mid[N_q][M_post1_q3 + Num8_p1 + Num7_p1 + Num6_p1 + Node_55_p1 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 
-	for ( k=0; k<(N_slot+1); k++ )//left
+	for (k = 0; k<(N_slot + 1); k++)//left
 	{
-		for ( j=0; j<(N_d0-2); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+10+k][j]=Ey_mid[N_q][M_post1-Num1_p1-(Nx_2+Nx_3)+(Nx_2+Nx_3)*k+j].amplitude();//1
-		for ( j=(N_d0-2); j<=(N_d0+N_w+2); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+10+k][j]=Ey_mid[N_q][M_post1-Num1_p1-(Nx_2+Nx_3)+(Nx_2+Nx_3)*k+N_d0-1+(j-N_d0+2)*2].amplitude();//2
-		for ( j=(N_d0+N_w+3); j<(N_d0+N_w+N_a-1); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+10+k][j]=Ey_mid[N_q][M_post1-Num1_p1-(Nx_2+Nx_3)+(Nx_2+Nx_3)*k+Node_1_p2+1+(j-N_d0-N_w-3)].amplitude();//3
-		for ( j=(N_d0+N_w+N_a-1); j<=(Nx_22-N_d0+1); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+10+k][j]=Ey_mid[N_q][M_post1-Num1_p1-(Nx_2+Nx_3)+(Nx_2+Nx_3)*k+Node_1_p2+N_a-2+(j-N_d0-N_w-N_a+1)*2].amplitude();//4
-		for ( j=(Nx_22-N_d0+2); j<(Nx_22); j++ )
-			Ey_who[N_d1+1+(N_s+N_w)*N_p+10+k][j]=Ey_mid[N_q][M_post1-Num1_p1-(Nx_2+Nx_3)+(Nx_2+Nx_3)*k+Node_11_p2+1+(j-Nx_22+N_d0-2)].amplitude();//5
+		for (j = 0; j<(N_d0 - 2); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 10 + k][j] = Ey_mid[N_q][M_post1 - Num1_p1 - (Nx_2 + Nx_3) + (Nx_2 + Nx_3)*k + j];//1
+		for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 10 + k][j] = Ey_mid[N_q][M_post1 - Num1_p1 - (Nx_2 + Nx_3) + (Nx_2 + Nx_3)*k + N_d0 - 1 + (j - N_d0 + 2) * 2];//2
+		for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 10 + k][j] = Ey_mid[N_q][M_post1 - Num1_p1 - (Nx_2 + Nx_3) + (Nx_2 + Nx_3)*k + Node_1_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+		for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 10 + k][j] = Ey_mid[N_q][M_post1 - Num1_p1 - (Nx_2 + Nx_3) + (Nx_2 + Nx_3)*k + Node_1_p2 + N_a - 2 + (j - N_d0 - N_w - N_a + 1) * 2];//4
+		for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+			Ey_who[N_d1 + 1 + (N_s + N_w)*N_p + 10 + k][j] = Ey_mid[N_q][M_post1 - Num1_p1 - (Nx_2 + Nx_3) + (Nx_2 + Nx_3)*k + Node_11_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
 	}
 
 
 }
+//显示完整场图
+void show_value(int M){
+	vector<double> x(M);
 
+	ifstream in_e("Evalue.txt");
+	for (int i = 0; i != M; i++)
+		in_e >> x[i];
+	in_e.close();
+	const int overlapping_nodes = 2 * Num2 + Num3;
+	int i, j;
+	const int Nx_22 = 58;//Nx_side+2*(N_w+1);
+	int k = 0;
+	double **Ey_whole = new double*[(N_d1 + 1) * 2 + (N_circle + 2)*(N_w + N_s) + N_s - 1];//括号内代表行数
+	for (j = 0; j<((N_d1 + 1) * 2 + (N_circle + 2)*(N_w + N_s) + N_s - 1); j++)
+	{
+		Ey_whole[j] = new double[Nx_22];
+	}
+	//将总场值按照分区存储
+	double **Ey_total2_end = new double*[N_end];//
+	for (j = 0; j<N_end; j++)
+	{
+		Ey_total2_end[j] = new double[M_end];
+	}
+	double **Ey_total2_middle = new double*[N_middle];//
+	for (j = 0; j<N_middle; j++)
+	{
+		Ey_total2_middle[j] = new double[M_middle];
+	}
+	double **Ey_total2_post1 = new double*[N_post1];//
+	for (j = 0; j<N_post1; j++)
+	{
+		Ey_total2_post1[j] = new double[M_post1];
+	}
+	double **Ey_total2_post2 = new double*[N_post2];//
+	for (j = 0; j<N_post2; j++)
+	{
+		Ey_total2_post2[j] = new double[M_post2];
+	}
+	int startpos[13];
+	startpos[0] = 0;												//end0
+	startpos[1] = startpos[0] + M_end - overlapping_nodes;
+	startpos[2] = startpos[1] + M_middle - overlapping_nodes;
+	startpos[3] = startpos[2] + M_middle - overlapping_nodes;		//post1
+	startpos[4] = startpos[3] + M_post1 - overlapping_nodes;
+	startpos[5] = startpos[4] + M_middle - overlapping_nodes;
+	startpos[6] = startpos[5] + M_middle - overlapping_nodes;		//post2
+	startpos[7] = startpos[6] + M_post2 - overlapping_nodes;
+	startpos[8] = startpos[7] + M_middle - overlapping_nodes;
+	startpos[9] = startpos[8] + M_middle - overlapping_nodes;		//post1
+	startpos[10] = startpos[9] + M_post1 - overlapping_nodes;
+	startpos[11] = startpos[10] + M_middle - overlapping_nodes;
+	startpos[12] = startpos[11] + M_middle - overlapping_nodes;		//end1
+	cout << "startpos of zone:" << endl;
+	for (int i = 0; i != 13; i++)
+		cout << setw(2) << i << "/" << setw(5) << startpos[i] << endl;
+	cout << M - M_end << endl;
+
+	//将x转化为Ey_total2_*
+	for (int i = 0; i != M_end; i++)									//end0
+		Ey_total2_end[0][i] = x[i + startpos[0]];
+	for (int i = 0; i != M_middle; i++)
+		Ey_total2_middle[0][i] = x[i + startpos[1]];
+	for (int i = 0; i != M_middle; i++)
+		Ey_total2_middle[1][i] = x[i + startpos[2]];
+	for (int i = 0; i != M_post1; i++)
+		Ey_total2_post1[0][i] = x[i + startpos[3]];						//post1
+	for (int i = 0; i != M_middle; i++)
+		Ey_total2_middle[2][i] = x[i + startpos[4]];
+	for (int i = 0; i != M_middle; i++)
+		Ey_total2_middle[3][i] = x[i + startpos[5]];
+	for (int i = 0; i != M_middle; i++)
+		Ey_total2_post2[0][i] = x[i + startpos[6]];						//post2
+	for (int i = 0; i != M_middle; i++)
+		Ey_total2_middle[4][i] = x[i + startpos[7]];
+	for (int i = 0; i != M_middle; i++)
+		Ey_total2_middle[5][i] = x[i + startpos[8]];
+	for (int i = 0; i != M_post1; i++)
+		Ey_total2_post1[0][i] = x[i + startpos[9]];						//post1
+	for (int i = 0; i != M_end; i++)
+		for (int i = 0; i != M_middle; i++)
+			Ey_total2_middle[4][i] = x[i + startpos[10]];
+	for (int i = 0; i != M_middle; i++)
+		Ey_total2_end[1][i] = x[i + startpos[11]];						//end1
+
+	//初始化，最大值
+	for (i = 0; i<((N_d1 + 1) * 2 + (N_circle + 2)*(N_w + N_s) + N_s - 1); i++)
+	{
+		for (j = 0; j<Nx_22; j++)
+		{
+			Ey_whole[i][j] = 0.5;//!!
+		}
+	}
+
+	//****************************************************
+	//********************region_side_in******************
+	//****************************************************
+	for (i = 0; i<(N_d1 + 1); i++)
+	{
+		for (j = 0; j<N_d0; j++)
+			Ey_whole[i][j] = Ey_total2_end[0][j + Nx_side*i];
+		for (j = N_d0; j<(N_d0 + N_a); j++)
+			Ey_whole[i][j + N_w + 1] = Ey_total2_end[0][j + Nx_side*i];
+		for (j = (N_d0 + N_a); j<Nx_side; j++)
+			Ey_whole[i][j + (N_w + 1) * 2] = Ey_total2_end[0][j + Nx_side*i];
+	}
+
+	//****************************************************
+	//********************region_middle*******************
+	//****************************************************
+
+	// 普通圆孔0-1
+	show_middle(0, 0, Ey_whole, Ey_total2_middle);
+	show_middle(1, 1, Ey_whole, Ey_total2_middle);
+
+
+	// 第一个post1 小圆孔 !!
+	show_post1(2, 0, Ey_whole, Ey_total2_post1);
+	// 普通圆孔3-4
+	show_middle(4, 2, Ey_whole, Ey_total2_middle);
+	show_middle(5, 3, Ey_whole, Ey_total2_middle);
+	// post2 大圆孔 !!!  ( 6&7 )  10 line
+	//line 1、2
+	for (k = 0; k<(N_slot + 1); k++)//left
+	{
+		for (j = 0; j<(N_d0 - 2); j++)
+			Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + k][j] = Ey_total2_post2[0][(Nx_2 + Nx_3)*k + j];//1
+		for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
+			Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + k][j] = Ey_total2_post2[0][(Nx_2 + Nx_3)*k + N_d0 - 1 + (j - N_d0 + 2) * 2];//2
+		for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+			Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + k][j] = Ey_total2_post2[0][(Nx_2 + Nx_3)*k + Node_1_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+		for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
+			Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + k][j] = Ey_total2_post2[0][(Nx_2 + Nx_3)*k + Node_1_p2 + N_a - 2 + (j - N_d0 - N_w - N_a + 1) * 2];//4
+		for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+			Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + k][j] = Ey_total2_post2[0][(Nx_2 + Nx_3)*k + Node_11_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+	}
+	// line 3--Num 5_p2
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][j] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + j];//1
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][N_d0 - 2] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + N_d0 - 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][N_d0 - 1] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + N_d0 + 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][N_d0] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + N_d0 + 5];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][N_d0 + N_w] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + N_d0 + 8];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][N_d0 + N_w + 1] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2 - 3];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][N_d0 + N_w + 2] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2 - 1];//2
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][j] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][N_d0 + N_w + N_a - 1] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2 + N_a - 2];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][N_d0 + N_w + N_a] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_5_p2 + N_a];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][N_d0 + N_w + N_a + 1] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node54_p2 - 1];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][Nx_22 - N_d0 - 1] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node54_p2 + 2];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][Nx_22 - N_d0] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_55_p2 - 3];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][Nx_22 - N_d0 + 1] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_55_p2 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 1][j] = Ey_total2_post2[0][(Nx_2 + Nx_3) * 1 + Num1_p2 + Num2_p2 + Num3_p2 + Num4_p2 + Node_55_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+
+	// line 4--Num 9_p2
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][j] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + j];//1
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][N_d0 - 2] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + N_d0 - 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][N_d0 - 1] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + N_d0 + 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][N_d0 + N_w + 1] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node_9_p2 - 3];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][N_d0 + N_w + 2] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node_9_p2 - 1];//2
+
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 6); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][j] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node_9_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+	for (j = (N_d0 + N_w + 6); j<(N_d0 + N_w + 12); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][j] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node_9_p2 + 5 + (j - N_d0 - N_w - 6) * 2];//3
+	for (j = (N_d0 + N_w + 12); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][j] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node93_p2 + 1 + (j - N_d0 - N_w - 12)];//3
+
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][N_d0 + N_w + N_a - 1] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node93_p2 + 5];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][N_d0 + N_w + N_a] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node93_p2 + 7];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][Nx_22 - N_d0] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node_99_p2 - 3];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][Nx_22 - N_d0 + 1] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node_99_p2 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 2][j] = Ey_total2_post2[0][M_post2_q1 - Num9_p2 + Node_99_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+
+	// line 5--Num 13_p2
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][j] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + j];//1
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 - 2] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + N_d0 - 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 - 1] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + N_d0 + 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + N_d0 + 5];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + N_d0 + 8];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + 1] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_13_p2 - 3];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + 2] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_13_p2 - 1];//2
+
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 6); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][j] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_13_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + 6] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_13_p2 + 5];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + 7] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_13_p2 + 8];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + 8] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_13_p2 + 12];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + 9] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_13_p2 + 16];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + 10] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node133_p2 - 4];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + 11] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node133_p2 - 1];//3
+	for (j = (N_d0 + N_w + 12); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][j] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node133_p2 + 1 + (j - N_d0 - N_w - 12)];//3
+
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + N_a - 1] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node133_p2 + 5];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + N_a] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node133_p2 + 7];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][N_d0 + N_w + N_a + 1] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node134_p2 - 1];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][Nx_22 - N_d0 - 1] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node134_p2 + 2];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][Nx_22 - N_d0] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_1313_p2 - 3];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][Nx_22 - N_d0 + 1] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_1313_p2 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 6 + N_slot + 3][j] = Ey_total2_post2[0][M_post2_q1 + Num10_p2 + Num11_p2 + Num12_p2 + Node_1313_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+
+	// line 6--Num 17_p2
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][j] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + j];//1
+	for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][j] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + N_d0 - 1 + (j - N_d0 + 2) * 2];//2
+
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 6); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][j] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + Node_17_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][N_d0 + N_w + 6] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + Node173_p2 + 1];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][N_d0 + N_w + 7] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + Node173_p2 + 4];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][N_d0 + N_w + 10] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + Node174_p2 - 4];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][N_d0 + N_w + 11] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + Node174_p2 - 1];//3
+	for (j = (N_d0 + N_w + 12); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][j] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + Node174_p2 + 1 + (j - N_d0 - N_w - 12)];//3
+
+	for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][j] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + Node174_p2 + 5 + (j - N_d0 - N_w - N_a + 1) * 2];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7][j] = Ey_total2_post2[0][M_post2_q2 - Num17_p2 - Num18_p2 - Num19_p2 + Node_1717_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+
+	// line 7--Num 21_p2
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][j] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + j];//1
+	for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][j] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + N_d0 - 1 + (j - N_d0 + 2) * 2];//2
+
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 6); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][j] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + Node_17_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][N_d0 + N_w + 6] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + Node173_p2 + 1];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][N_d0 + N_w + 7] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + Node173_p2 + 4];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][N_d0 + N_w + 10] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + Node174_p2 - 4];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][N_d0 + N_w + 11] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + Node174_p2 - 1];//3
+	for (j = (N_d0 + N_w + 12); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][j] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + Node174_p2 + 1 + (j - N_d0 - N_w - 12)];//3
+
+	for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][j] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + Node174_p2 + 5 + (j - N_d0 - N_w - N_a + 1) * 2];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 1][j] = Ey_total2_post2[0][M_post2_q2 + Num18_p2 + Node_1717_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+
+	// line 8--Num 25_p2 (Num 13_p2)
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][j] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + j];//1
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 - 2] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + N_d0 - 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 - 1] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + N_d0 + 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + N_d0 + 5];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + N_d0 + 8];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + 1] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_13_p2 - 3];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + 2] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_13_p2 - 1];//2
+
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 6); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][j] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_13_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + 6] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_13_p2 + 5];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + 7] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_13_p2 + 8];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + 8] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_13_p2 + 12];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + 9] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_13_p2 + 16];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + 10] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node133_p2 - 4];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + 11] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node133_p2 - 1];//3
+	for (j = (N_d0 + N_w + 12); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][j] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node133_p2 + 1 + (j - N_d0 - N_w - 12)];//3
+
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + N_a - 1] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node133_p2 + 5];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + N_a] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node133_p2 + 7];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][N_d0 + N_w + N_a + 1] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node134_p2 - 1];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][Nx_22 - N_d0 - 1] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node134_p2 + 2];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][Nx_22 - N_d0] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_1313_p2 - 3];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][Nx_22 - N_d0 + 1] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_1313_p2 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 2][j] = Ey_total2_post2[0][M_post2_q2 + Num14_p2 + Num15_p2 + Num16_p2 + Num17_p2 + Num18_p2 + Node_1313_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+
+	// line 9--Num 29_p2 (4--Num 9_p2)
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][j] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + j];//1
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][N_d0 - 2] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + N_d0 - 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][N_d0 - 1] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + N_d0 + 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][N_d0 + N_w + 1] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node_9_p2 - 3];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][N_d0 + N_w + 2] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node_9_p2 - 1];//2
+
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + 6); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][j] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node_9_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+	for (j = (N_d0 + N_w + 6); j<(N_d0 + N_w + 12); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][j] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node_9_p2 + 5 + (j - N_d0 - N_w - 6) * 2];//3
+	for (j = (N_d0 + N_w + 12); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][j] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node93_p2 + 1 + (j - N_d0 - N_w - 12)];//3
+
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][N_d0 + N_w + N_a - 1] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node93_p2 + 5];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][N_d0 + N_w + N_a] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node93_p2 + 7];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][Nx_22 - N_d0] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node_99_p2 - 3];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][Nx_22 - N_d0 + 1] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node_99_p2 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 3][j] = Ey_total2_post2[0][M_post2_q3 - Num9_p2 + Node_99_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+
+	// line 10--Num 33_p2 (3--Num 5_p2)
+	for (j = 0; j<(N_d0 - 2); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][j] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + j];//1
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][N_d0 - 2] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + N_d0 - 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][N_d0 - 1] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + N_d0 + 1];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][N_d0] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + N_d0 + 5];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][N_d0 + N_w] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + N_d0 + 8];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][N_d0 + N_w + 1] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_5_p2 - 3];//2
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][N_d0 + N_w + 2] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_5_p2 - 1];//2
+	for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][j] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_5_p2 + 1 + (j - N_d0 - N_w - 3)];//3
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][N_d0 + N_w + N_a - 1] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_5_p2 + N_a - 2];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][N_d0 + N_w + N_a] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_5_p2 + N_a];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][N_d0 + N_w + N_a + 1] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node54_p2 - 1];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][Nx_22 - N_d0 - 1] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node54_p2 + 2];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][Nx_22 - N_d0] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_55_p2 - 3];//4
+	Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][Nx_22 - N_d0 + 1] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_55_p2 - 1];//4
+	for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+		Ey_whole[N_d1 + 1 + (N_s + N_w) * 7 + 4][j] = Ey_total2_post2[0][M_post2_q3 + Num8_p2 + Num7_p2 + Num6_p2 + Node_55_p2 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+
+	// 普通圆孔5-6
+	show_middle(8, 4, Ey_whole, Ey_total2_middle);
+	show_middle(9, 5, Ey_whole, Ey_total2_middle);
+	// 第二个post1 小圆孔 !!
+	show_post1(10, 1, Ey_whole, Ey_total2_post1);
+	// 普通圆孔7-9
+	show_middle(12, 6, Ey_whole, Ey_total2_middle);
+	show_middle(13, 7, Ey_whole, Ey_total2_middle);
+
+	//****************************************************
+	//********************region_side_out*****************
+	//****************************************************
+	for (k = 0; k<(N_slot + 1); k++)//right
+	{
+		for (j = 0; j<(N_d0 - 2); j++)
+			Ey_whole[N_d1 + 1 + N_slot2 + (N_s + N_w)*(N_circle + 2) + k][j] = Ey_total2_end[1][(Nx_2 + Nx_3)*k + j];//1
+		for (j = (N_d0 - 2); j <= (N_d0 + N_w + 2); j++)
+			Ey_whole[N_d1 + 1 + N_slot2 + (N_s + N_w)*(N_circle + 2) + k][j] = Ey_total2_end[1][(Nx_2 + Nx_3)*k + N_d0 - 1 + (j - N_d0 + 2) * 2];//2
+		for (j = (N_d0 + N_w + 3); j<(N_d0 + N_w + N_a - 1); j++)
+			Ey_whole[N_d1 + 1 + N_slot2 + (N_s + N_w)*(N_circle + 2) + k][j] = Ey_total2_end[1][(Nx_2 + Nx_3)*k + Node_1 + 1 + (j - N_d0 - N_w - 3)];//3
+		for (j = (N_d0 + N_w + N_a - 1); j <= (Nx_22 - N_d0 + 1); j++)
+			Ey_whole[N_d1 + 1 + N_slot2 + (N_s + N_w)*(N_circle + 2) + k][j] = Ey_total2_end[1][(Nx_2 + Nx_3)*k + Node_1 + N_a - 2 + (j - N_d0 - N_w - N_a + 1) * 2];//4
+		for (j = (Nx_22 - N_d0 + 2); j<(Nx_22); j++)
+			Ey_whole[N_d1 + 1 + N_slot2 + (N_s + N_w)*(N_circle + 2) + k][j] = Ey_total2_end[1][(Nx_2 + Nx_3)*k + Node_11 + 1 + (j - Nx_22 + N_d0 - 2)];//5
+	}
+	for (i = 0; i<(N_d1 + 1); i++)
+	{
+		for (j = 0; j<N_d0; j++)
+			Ey_whole[N_d1 + 1 + N_s - 1 + (N_s + N_w)*(N_circle + 2) + i][j] = Ey_total2_end[1][j + Nx_side*i + Nx_2 * 2 + Nx_3 * 1 + Nx_1];
+		for (j = N_d0; j<(N_d0 + N_a); j++)
+			Ey_whole[N_d1 + 1 + N_s - 1 + (N_s + N_w)*(N_circle + 2) + i][j + N_w + 1] = Ey_total2_end[1][j + Nx_side*i + Nx_2 * 2 + Nx_3 * 1 + Nx_1];
+		for (j = (N_d0 + N_a); j<Nx_side; j++)
+			Ey_whole[N_d1 + 1 + N_s - 1 + (N_s + N_w)*(N_circle + 2) + i][j + (N_w + 1) * 2] = Ey_total2_end[1][j + Nx_side*i + Nx_2 * 2 + Nx_3 * 1 + Nx_1];
+	}
+	//将矩阵导出********
+	ofstream outfile("result0.txt", ios::app);
+	for (i = 0; i<((N_d1 + 1) * 2 + (N_circle + 2)*(N_w + N_s) + N_s - 1); i++)
+	{
+		for (j = 0; j<Nx_22; j++)
+		{
+			outfile << Ey_whole[i][j] << endl;
+		}
+	}
+	outfile.close();
+
+	cout << "whole_Ey执行完成！" << endl;
+	//显示完整场图!
+
+	////delete Ey_whole
+	for (j = 0; j<((N_d1 + 1) * 2 + (N_circle + 2)*(N_w + N_s) + N_s - 1); j++)
+	{
+		delete[] Ey_whole[j];
+		Ey_whole[j] = 0;
+	}
+	delete[] Ey_whole;
+	Ey_whole = 0;
+
+}
+//用s参数验证程序正确性
+//输入全部场值
 //导出场值
 void toEvalue(complex *x, int num_total);
-//投影过程的封装函数
-void projective_process(complex **A, int ** b, complex *B, complex *X, complex* Binc, complex* x, int startpos, int extra_nodes, double sinta, int M, int N){
-	for (int i = 0; i != M; i++)
-		B[i] = Binc[i + startpos];
-	cgmethod(A, b, B, X, M, N, N_matrix);
-	for (int i = 0; i != N; i++)
-	{
-		X[i] = X[i] * sinta;
-		x[i + startpos + extra_nodes] = x[i + startpos + extra_nodes] + X[i];
-	}
-	getB(Binc, A, b, X, M, N, startpos);
-}
 //导出坐标，绘图使用的xy坐标
 void get_xy_positon(){
 	//输出坐标信息
@@ -17378,8 +17757,7 @@ void get_xy_positon(){
 		}
 	out_xy.close();
 }
-//输出场值图
-
+void show_binc(int k, complex* binc, int num_total);
 void main()// DDM-10 region
 {
 	time_t begin;
@@ -17428,20 +17806,24 @@ void main()// DDM-10 region
 	int startpos[13];	
 	startpos[0] = 0;																				//end
 	startpos[1] = startpos[0] + zone_N0 - extra_nodes0;												
-	startpos[2] = startpos[1] + extra_nodes0 + zone_N1 + overlapping_nodes - extra_nodes1;
-	startpos[3] = startpos[2] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;			//post1
-	startpos[4] = startpos[3] + extra_nodes1 + zone_N1_post1 + overlapping_nodes - extra_nodes1;	
-	startpos[5] = startpos[4] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;
-	startpos[6] = startpos[5] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;			//post2
-	startpos[7] = startpos[6] + extra_nodes1 + zone_N1_post2 + overlapping_nodes - extra_nodes2;	
-	startpos[8] = startpos[7] + extra_nodes2 + zone_N1 + overlapping_nodes - extra_nodes1;
-	startpos[9] = startpos[8] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;			//post1
-	startpos[10] = startpos[9] + extra_nodes1 + zone_N1_post1 + overlapping_nodes - extra_nodes1;
-	startpos[11] = startpos[10] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;
-	startpos[12] = startpos[11] + extra_nodes1 + zone_N1 + overlapping_nodes - extra_nodes1;		//end
+	startpos[2] = startpos[1] + extra_nodes0 + overlapping_nodes + zone_N1 - extra_nodes1;
+	startpos[3] = startpos[2] + extra_nodes1 + overlapping_nodes + zone_N1 - extra_nodes1;			//post1
+	startpos[4] = startpos[3] + extra_nodes1 + overlapping_nodes + zone_N1_post1 - extra_nodes1;
+	startpos[5] = startpos[4] + extra_nodes1 + overlapping_nodes + zone_N1  - extra_nodes1;
+	startpos[6] = startpos[5] + extra_nodes1 + overlapping_nodes + zone_N1  - extra_nodes1;			//post2
+	startpos[7] = startpos[6] + extra_nodes1 + overlapping_nodes + zone_N1_post2  - extra_nodes2;
+	startpos[8] = startpos[7] + extra_nodes2 + overlapping_nodes + zone_N1 - extra_nodes1;
+	startpos[9] = startpos[8] + extra_nodes1 + overlapping_nodes + zone_N1  - extra_nodes1;			//post1
+	startpos[10] = startpos[9] + extra_nodes1 + overlapping_nodes + zone_N1_post1  - extra_nodes1;
+	startpos[11] = startpos[10] + extra_nodes1 + overlapping_nodes + zone_N1  - extra_nodes1;
+	startpos[12] = startpos[11] + extra_nodes1 + overlapping_nodes + zone_N1 - extra_nodes1;		//end
+	cout << "startpos of computing:" << endl;
 	for (int i = 0; i != 13; i++)
-		cout << i << ":" << startpos[i] << endl;
+		cout << setw(2) << i << "/" << setw(5) << startpos[i] << endl;
 
+
+	//显示完整场值图 从文件中读取
+	show_value(M);
 	complex zero(0, 0);
 	complex* Binc = new complex[M];
 	for (int i = 0; i != M; i++)
@@ -17449,158 +17831,119 @@ void main()// DDM-10 region
 
 	//添加激励源
 	scan_binc(Binc, M);
-
 	//初试并设置分区矩阵参数 未考虑每个单独的区域！！！！
 	//A_* 表示系数，b_* 表示位置
 	complex **A_end0 = new complex*[M0];
-	for (int i = 0; i != M0; i++)
-		A_end0[i] = new complex[N];
 	int** b_end0 = new int*[M0];
 	for (int i = 0; i != M0; i++)
 	{
+		A_end0[i] = new complex[N];
 		b_end0[i] = new int[N];
 	}
 
 	complex **A_middle = new complex*[M1];
-	for (int i = 0; i != M1; i++)
-		A_middle[i] = new complex[N];
 	int** b_middle = new int*[M1];
 	for (int i = 0; i != M1; i++)
 	{
+		A_middle[i] = new complex[N];
 		b_middle[i] = new int[N];
 	}
 
 	complex **A_middle_1 = new complex*[M1_1];
-	for (int i = 0; i != M1_1; i++)
-		A_middle_1[i] = new complex[N];
 	int** b_middle_1 = new int*[M1_1];
 	for (int i = 0; i != M1_1; i++)
 	{
+		A_middle_1[i] = new complex[N];
 		b_middle_1[i] = new int[N];
 	}
 
 	complex **A_middle_5 = new complex*[M1_5];
-	for (int i = 0; i != M1_5; i++)
-		A_middle_5[i] = new complex[N];
 	int** b_middle_5 = new int*[M1_5];
 	for (int i = 0; i != M1_5; i++)
 	{
+		A_middle_5[i] = new complex[N];
 		b_middle_5[i] = new int[N];
 	}
 
 	complex **A_middle_7 = new complex*[M1_7];
-	for (int i = 0; i != M1_7; i++)
-		A_middle_7[i] = new complex[N];
 	int** b_middle_7 = new int*[M1_7];
 	for (int i = 0; i != M1_7; i++)
 	{
+		A_middle_7[i] = new complex[N];
 		b_middle_7[i] = new int[N];
 	}
 
 	complex **A_middle_11 = new complex*[M1_11];
-	for (int i = 0; i != M1_11; i++)
-		A_middle_11[i] = new complex[N];
 	int** b_middle_11 = new int*[M1_11];
 	for (int i = 0; i != M1_11; i++)
 	{
+		A_middle_11[i] = new complex[N];
 		b_middle_11[i] = new int[N];
 	}
 
 	complex **A_middle_post1 = new complex*[M1_post1];
-	for (int i = 0; i != M1_post1; i++)
-		A_middle_post1[i] = new complex[N];
 	int** b_middle_post1 = new int*[M1_post1];
 	for (int i = 0; i != M1_post1; i++)
 	{
+		A_middle_post1[i] = new complex[N];
 		b_middle_post1[i] = new int[N];
 	}
 	
 	complex **A_middle_post2 = new complex*[M1_post2];
-	for (int i = 0; i != M1_post2; i++)
-		A_middle_post2[i] = new complex[N];
 	int** b_middle_post2 = new int*[M1_post2];
 	for (int i = 0; i != M1_post2; i++)
 	{
+		A_middle_post2[i] = new complex[N];
 		b_middle_post2[i] = new int[N];
 	}
 	
 	complex **A_end1 = new complex*[M2];
-	for (int i = 0; i != M2; i++)
-		A_end1[i] = new complex[N];
 	int** b_end1 = new int*[M2];
 	for (int i = 0; i != M2; i++)
 	{
+		A_end1[i] = new complex[N];
 		b_end1[i] = new int[N];
 	}
 
-	//获取系数矩阵 未完成！！！！！！！
+	//获取系数矩阵(post1的左右两边没有处理）
 	scan_coef_Matrix_end1(A_end0, M_end, b_end0, M0, N0,0);										//end
 	scan_coef_Matrix_middle_1(A_middle_1, M_middle, b_middle_1, M1_1, N1_1, extra_nodes0);
 	scan_coef_Matrix_middle(A_middle, M_middle, b_middle, M1, N1, extra_nodes1);
 	scan_coef_Matrix_post1(A_middle_post1, M_post1, b_middle_post1, M1_post1, N1_post1, extra_nodes1);			//post1
-	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
 	scan_coef_Matrix_middle_5(A_middle_5, M_middle, b_middle_5, M1_5, N1_5, extra_nodes1);
 	scan_coef_Matrix_post2(A_middle_post2, M_post2, b_middle_post2, M1_post2, N1_post2, extra_nodes1);			//post2
 	scan_coef_Matrix_middle_7(A_middle_7, M_middle, b_middle_7, M1_7, N1_7, extra_nodes2);
-	///scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
-	//scan_coef_Matrix_middle(A1_post1, M_post1, b1_post1, M1_post1, N1_post1);			//post1
-	//scan_coef_Matrix_middle(A1, M_middle, b1, M1, N1);
 	scan_coef_Matrix_middle_11(A_middle_11, M_middle, b_middle_11, M1_11, N1_11, extra_nodes1);
 	scan_coef_Matrix_end2(A_end1, M_end, b_end1, M2, N2, extra_nodes1);										//end
 
 	//中间存储变量 X_* 表示最小二乘法的结果
 	complex* X_end0 = new complex[N0];
-	for (int i = 0; i != N0; i++)
-		X_end0[i] = zero;
 	complex* X_middle = new complex[N1];
-	for (int i = 0; i != N1; i++)
-		X_middle[1] = zero;
 	complex* X_middle_post1 = new complex[N1_post1];
-	for (int i = 0; i != N1; i++)
-		X_middle_post1[1] = zero;
 	complex* X_middle_post2 = new complex[N1_post2];
-	for (int i = 0; i != N1; i++)
-		X_middle_post2[1] = zero;
 	complex* X_end1 = new complex[N2];
-	for (int i = 0; i != N2; i++)
-		X_end1[i] = zero;
+
 	// B_* 表示最小二乘法的右端项
 	complex* B_end0 = new complex[M0];
-	for (int i = 0; i != M0; i++)
-		B_end0[i] = zero;
 	complex* B_middle = new complex[M1];
-	for (int i = 0; i != M1; i++)
-		B_middle[i] = zero;
-	//1,11 使用
-	complex* B_middle_1 = new complex[M1_1];
-	for (int i = 0; i != M1_1; i++)
-		B_middle_1[i] = zero;
-	//5,7 使用
-	complex* B_middle_5 = new complex[M1_5];
-	for (int i = 0; i != M1_5; i++)
-		B_middle_5[i] = zero;
+	complex* B_middle_1 = new complex[M1_1];			//1,11 使用
+	complex* B_middle_5 = new complex[M1_5];			//5,7 使用
 	complex* B_middle_post1 = new complex[M1_post1];
-	for (int i = 0; i != M1_post1; i++)
-		B_middle_post1[i] = zero;
 	complex* B_middle_post2 = new complex[M1_post2];
-	for (int i = 0; i != M1_post2; i++)
-		B_middle_post2[i] = zero;
 	complex* B_end1 = new complex[M2];
-	for (int i = 0; i != M2; i++)
-		B_end1[i] = zero;
+
 	//存储的最终结果 x 每个节点的数值结果
 	complex* x = new complex[M];
-	for (int i = 0; i != M; i++)
-		x[i] = zero;
 
+	//收敛条件设置
 	double bnorm = 0.0;
 	bnorm = VectorNorm(M, Binc);
-
-	double eps = bnorm*1e-2;
+	double eps = bnorm*1e-3;
 	int times = 0;
 	double sinta;
 	double sinta1 = 1.75;
 	//sinta1 = 1.0; 
+
 	cout << "收敛目标：" << eps << endl;
 	cout << "开始投影:" << endl;
 	//迭代过程 未完成！！！！！
@@ -17612,26 +17955,49 @@ void main()// DDM-10 region
 		else
 			sinta = sinta1;
 
+		int k = 0;
 		//调用投影函数
 		projective_process(A_end0, b_end0, B_end0, X_end0, Binc, x, startpos[0], 0, sinta, M0, N0);		//end
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle_1, b_middle_1, B_middle_1, X_middle, Binc, x, startpos[1], extra_nodes0, sinta, M1_1, N1_1);
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle, b_middle, B_middle, X_middle, Binc, x, startpos[2], extra_nodes1, sinta, M1, N1);
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle_post1, b_middle_post1, B_middle_post1, X_middle_post1, Binc, x, startpos[3], extra_nodes1, sinta, M1_post1, N1_post1);		//post1
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle, b_middle, B_middle, X_middle, Binc, x, startpos[4], extra_nodes1, sinta, M1, N1);
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle_5, b_middle_5, B_middle_5, X_middle, Binc, x, startpos[5], extra_nodes1, sinta, M1_5, N1_5);
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle_post2, b_middle_post2, B_middle_post2, X_middle_post2, Binc, x, startpos[6], extra_nodes1, sinta, M1_post2, N1_post2);		//post2
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle_7, b_middle_7, B_middle_5, X_middle, Binc, x, startpos[7], extra_nodes2, sinta, M1_7, N1_7);
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle, b_middle, B_middle, X_middle, Binc, x, startpos[8], extra_nodes1, sinta, M1, N1);
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle_post1, b_middle_post1, B_middle_post1, X_middle_post1, Binc, x, startpos[9], extra_nodes1, sinta, M1_post1, N1_post1);		//post1
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle, b_middle, B_middle, X_middle, Binc, x, startpos[10], extra_nodes1, sinta, M1, N1);
+		//show_binc(k++, Binc, M);
 		projective_process(A_middle_11, b_middle_11, B_middle_1, X_middle, Binc, x, startpos[11], extra_nodes1, sinta, M1_11, N1_11);
+		//show_binc(k++, Binc, M);
 		projective_process(A_end1, b_end1, B_end1, X_end1, Binc, x, startpos[12], extra_nodes1, sinta, M2, N2);		//end
+		//show_binc(k++, Binc, M);
 
 		bnorm = 0.0;
 		bnorm = VectorNorm(M, Binc);
 
 		cout << ++times << " cond:" << bnorm << endl;
 	}
+
+	ofstream out_e("Evalue.txt");
+	for (int i = 0; i != M; i++)
+		out_e << x[i].amplitude() << endl;
+	out_e.close();
+	ofstream out_all_x("x_all.txt");
+	for (int i = 0; i != M; i++)
+		out_all_x << x[i].real << " " << x[i].image << endl;
+	out_all_x.close();
 	
 	//用s参数验证程序正确性***************************
 	double s11 = 0, s21 = 0;//s11,s12
@@ -17645,14 +18011,14 @@ void main()// DDM-10 region
 		x1[j - N_d0 + 1].real = x[j].real;
 		x1[j - N_d0 + 1].image = x[j].image;
 	}
-	//	complex Einc2[N_a+2];
-	//	for( j=0; j<(N_a+2); j++ )
-	//	{
-	//		Einc2[j].real=sin( pi*j*4*dx/a );
-	//		Einc2[j].image=0;
-	//		x1[j].real=x1[j].real-Einc2[j].real;
-	//		x1[j].image=x1[j].image-Einc2[j].image;
-	//	}
+	complex Einc2[N_a+2];
+	for( j=0; j<(N_a+2); j++ )
+	{
+		Einc2[j].real=sin( pi*j*4*dx/a );
+		Einc2[j].image=0;
+		x1[j].real=x1[j].real-Einc2[j].real;
+		x1[j].image=x1[j].image-Einc2[j].image;
+	}
 	x2.real = 0;
 	x2.image = 0;
 	x3.real = 0;
@@ -17695,10 +18061,7 @@ void main()// DDM-10 region
 	outfile3 << "s21=" << s21 << " s11=" << s11 << endl;
 	outfile3.close();
 	
-	ofstream out_e("Evalue.txt");
-	for (int i = 0; i != M; i++)
-		out_e << x[i].amplitude() << endl;
-	out_e.close();
+	
 
 	//释放内存
 	delete Binc;
